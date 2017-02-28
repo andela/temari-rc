@@ -1,0 +1,43 @@
+<template name="vendorDetails">
+  <div class="panel panel-default panel-address-book">
+    <div class="panel-heading">
+      <h2 class="panel-title">Vendor Details</h2>
+    </div>
+    <div class="panel-body panel-content">
+      {{#autoForm collection="Accounts" doc=getVendorDetails  id="shopDetailsUpdateForm" type="update"}}
+        <fieldset>
+          <div class="row">
+            <div class="col-md-6 form-group{{#if afFieldIsInvalid name='shopName'}} has-error{{/if}}">
+                <label class="control-label">{{afFieldLabelText name='profile.vendorDetails.0.shopName'}}</label>
+                {{>afFieldInput name='profile.vendorDetails.0.shopName' value='profile.vendorDetails.0.shopName' autofocus=''}}
+                {{#if afFieldIsInvalid name="shopName"}}
+                <span class="help-block">{{afFieldMessage name="shopName"}}</span>
+                {{/if}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 form-group{{#if afFieldIsInvalid name='shopAddress'}} has-error{{/if}}">
+                <label class="control-label">{{afFieldLabelText name='shopAddress'}}</label>
+                {{>afFieldInput name="shopAddress" value=shopAddress autofocus=''}}
+                {{#if afFieldIsInvalid name="shopAddress"}}
+                <span class="help-block">{{afFieldMessage name="shopAddress"}}</span>
+                {{/if}}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 form-group{{#if afFieldIsInvalid name='shopPhone'}} has-error{{/if}}">
+                <label class="control-label">{{afFieldLabelText name='shopPhone'}}</label>
+                {{>afFieldInput name="shopPhone" value=shopPhone autofocus=''}}
+                {{#if afFieldIsInvalid name="shopPhone"}}
+                <span class="help-block">{{afFieldMessage name="shopPhone"}}</span>
+                {{/if}}
+            </div>
+          </div>
+            <div class="row text-right">
+              <button type="submit" class="btn btn-primary" data-i18n="app.saveAndContinue" data-event-action="updateShop">Save and continue</button>
+            </div>
+        </fieldset>
+      {{/autoForm}}
+    </div>
+  </div>
+</template>
