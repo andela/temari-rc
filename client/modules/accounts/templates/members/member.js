@@ -2,14 +2,28 @@ import { Reaction } from "/client/api";
 import { Packages, Shops } from "/lib/collections";
 import { Meteor } from "meteor/meteor";
 import { Template } from "meteor/templating";
+import { Accounts } from "/lib/collections";
 
 const getPermissionMap = (permissions) => {
   const permissionMap = {};
-  _.each(permissions, function (existing) {
+  _.each(permissions, function(existing) {
     permissionMap[existing.permission] = existing.label;
   });
   return permissionMap;
 };
+
+const permissions = [
+  "dashboard",
+  "createProduct",
+  "orders",
+  "dashboard/orders",
+  "reaction-shipping",
+  "shipping",
+  "reaction-orders",
+  "vendor",
+  "reaction-static-pages",
+  "staticPages"
+];
 
 /**
  * shopMember helpers
@@ -18,35 +32,72 @@ const getPermissionMap = (permissions) => {
  * to check each users permissions
  */
 Template.member.events({
-  "click [data-event-action=showMemberSettings]": function () {
+  "click [data-event-action=showMemberSettings]": function() {
     Reaction.showActionView({
       label: "Permissions",
       i18nKeyLabel: "admin.settings.permissionsSettingsLabel",
       data: this,
       template: "memberSettings"
     });
+  },
+
+  "click [data-event-action=activateVendor]": function(event, template) {
+    // we can create the store here using the below, We can try this in the future
+    // Meteor.call("shop/createShop", this.userId, shopObject);
+    const member = template.data;
+    Meteor.call("accounts/addUserPermissions", member.userId, permissions, Reaction.shopId);
+    Meteor.call("vendor/activateVendor", member.userId);
+  },
+
+  "click [data-event-action=deactivateVendor]": function(event, template) {
+    const member = template.data;
+    Meteor.call("accounts/removeUserPermissions", member.userId, permissions, Reaction.shopId);
+    Meteor.call("vendor/deactivateVendor", member.userId);
   }
 });
 
+
+Template.member.helpers({
+
+  isActiveVendor: function() {
+    let userDetails = Accounts.findOne(this.userId);
+    if (userDetails.profile.vendorDetails) {
+      userDetails = userDetails.profile.vendorDetails[0].shopActive;
+      return userDetails;
+    }
+    return false;
+  },
+  isInactiveVendor: function() {
+    let userDetails = Accounts.findOne(this.userId);
+    if (userDetails.profile.vendorDetails) {
+      userDetails = userDetails.profile.vendorDetails[0].shopActive;
+      if (userDetails === false);
+      return !userDetails;
+    }
+    return false;
+  }
+});
+
+
 Template.memberSettings.helpers({
-  isOwnerDisabled: function () {
+  isOwnerDisabled: function() {
     if (Meteor.userId() === this.userId) {
       if (Roles.userIsInRole(this.userId, "owner", this.shopId)) {
         return true;
       }
     }
   },
-  hasPermissionChecked: function (permission, userId) {
+  hasPermissionChecked: function(permission, userId) {
     if (userId && Roles.userIsInRole(userId, permission, this.shopId || Roles.userIsInRole(userId, permission,
         Roles.GLOBAL_GROUP))) {
       return "checked";
     }
   },
-  groupsForUser: function (groupUserId) {
+  groupsForUser: function(groupUserId) {
     const userId = groupUserId || this.userId || Template.parentData(1).userId;
     return Roles.getGroupsForUser(userId);
   },
-  shopLabel: function (thisShopId) {
+  shopLabel: function(thisShopId) {
     const shopId = thisShopId || Template.currentData();
     const shop = Shops.findOne({
       _id: shopId
@@ -55,14 +106,14 @@ Template.memberSettings.helpers({
       return shop.name || "Default Shop";
     }
   },
-  permissionGroups: function (thisShopId) {
+  permissionGroups: function(thisShopId) {
     const permissionGroups = [];
     const shopId = thisShopId || Template.currentData();
     const packages = Packages.find({
       shopId: shopId
     });
 
-    packages.forEach(function (pkg) {
+    packages.forEach(function(pkg) {
       const permissions = [];
       if (pkg.registry && pkg.enabled) {
         for (const registryItem of pkg.registry) {
@@ -91,7 +142,7 @@ Template.memberSettings.helpers({
           }
         }
         // todo review this, hardcoded WIP
-        const label = pkg.name.replace("reaction", "").replace(/(-.)/g, function (x) {
+        const label = pkg.name.replace("reaction", "").replace(/(-.)/g, function(x) {
           return " " + x[1].toUpperCase();
         });
 
@@ -108,7 +159,7 @@ Template.memberSettings.helpers({
     return permissionGroups;
   },
 
-  hasManyPermissions: function (permissions) {
+  hasManyPermissions: function(permissions) {
     return Boolean(permissions.length);
   }
 });
@@ -118,7 +169,7 @@ Template.memberSettings.helpers({
  *
  */
 Template.memberSettings.events({
-  "change [data-event-action=toggleMemberPermission]": function (event, template) {
+  "change [data-event-action=toggleMemberPermission]": function(event, template) {
     const self = this;
     const permissions = [];
     const member = template.data;
@@ -139,7 +190,7 @@ Template.memberSettings.events({
       Meteor.call("accounts/removeUserPermissions", member.userId, permissions, this.shopId);
     }
   },
-  "click [data-event-action=resetMemberPermission]": function (event, template) {
+  "click [data-event-action=resetMemberPermission]": function(event, template) {
     const $icon = $(event.currentTarget);
     if (confirm($icon.data("confirm"))) {
       const results = [];

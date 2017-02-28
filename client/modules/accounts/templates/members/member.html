@@ -7,6 +7,18 @@
         {{displayName this}}
         <span>&nbsp;({{this.email}})</span>
       </div>
+
+       {{#if isInactiveVendor member}}
+      <div class="member-list-item-controls activate-vendor">
+        <button class="btn btn-default" data-event-action="activateVendor" data-i18n="accountsUI.activateVendor">Activate Vendor</button>
+      </div>
+      {{/if}}
+      {{#if isActiveVendor member}}
+      <div class="member-list-item-controls deactivate-vendor" >
+        <button class="btn btn-default" data-event-action="deactivateVendor" data-i18n="accountsUI.deactivateVendor">Deactivate Vendor</button>
+      </div>
+      {{/if}}
+
       <div class="member-list-item-controls">
         <button class="btn btn-default" data-event-action="showMemberSettings" data-i18n="accountsUI.manage">Manage</button>
       </div>
