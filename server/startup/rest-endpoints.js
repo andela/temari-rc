@@ -1,19 +1,39 @@
-import { Shops } from '/lib/collections';
+import { Shops,  Accounts, Cart, Orders, Products } from '/lib/collections';
 
-// Items = new Mongo.Collection('items');
-// Articles = new Mongo.Collection('articles');
-
-if (Meteor.isServer) {
-  // Global API configuration
+export default () => {
   const Api = new Restivus({
     useDefaultAuth: true,
     prettyJson: true
   });
 
-  // Generates: GET, POST on /api/items and GET, PUT, PATCH, DELETE on
-  // /api/items/:id for the Items collection
-  Api.addCollection(Shops);
+  const additional = (collection) => {
+    return {
+      routeOptions: {
+        authRequired: true
+      },
+      endpoints: {
+        put: {
+          roleRequired: ['owner', 'admin'],
+          action: () => {
+            const isUpdated = collection.update(this.urlParams.id, {
+              $set: this.bodyParams
+            });
+            if (isUpdated) {
+              return { statusCode: 201, status: 'success', data: isUpdated }
+            }
+            return { status: 'fail', message: 'Record not found' }
+          }
+        },
 
-  // Generates: POST on /api/users and GET, DELETE /api/users/:id for
-  // Meteor.users collection
-}
+        delete: {
+          roleRequired: 'admin'
+        }
+      }
+    };
+  };
+  Api.addCollection(Shops, additional(Shops));
+  Api.addCollection(Accounts, additional(Accounts));
+  Api.addCollection(Cart, additional(Cart));
+  Api.addCollection(Orders, additional(Orders));
+  Api.addCollection(Products, additional(Products));
+};
