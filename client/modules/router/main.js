@@ -37,7 +37,7 @@ function checkRouterPermissions(context) {
     return context;
   }
   // determine if this is a valid route or a 404
-  const routeExists = _.find(Router._routes, function (route) {
+  const routeExists = _.find(Router._routes, function(route) {
     return route.path === context.path;
   });
 
@@ -117,7 +117,7 @@ export function ReactionLayout(options = {}) {
   }
 
   // autorun router rendering
-  Tracker.autorun(function () {
+  Tracker.autorun(function() {
     if (Reaction.Subscriptions.Shops.ready()) {
       const shop = Shops.findOne(Reaction.getShopId());
       if (shop) {
@@ -179,6 +179,16 @@ Router.initPackageRoutes = () => {
       name: "index",
       action() {
         ReactionLayout(Session.get("INDEX_OPTIONS") || {});
+      }
+    });
+
+    // Shop View route
+    Router.route("/reaction/vendors/:shopName", {
+      action(params) {
+        ReactionLayout({
+          template: "products",
+          shopName: params.shopName
+        });
       }
     });
 

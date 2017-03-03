@@ -106,7 +106,7 @@ Meteor.methods({
    * Declaration to keep it more secure
    * @return {Object|Boolean} cartId - cartId on success or false
    */
-  "cart/mergeCart": function (cartId, currentSessionId) {
+  "cart/mergeCart": function(cartId, currentSessionId) {
     check(cartId, String);
     check(currentSessionId, Match.Optional(String));
 
@@ -156,7 +156,7 @@ Meteor.methods({
         // up completely, just to `coreCheckoutShipping` stage. Also, we will
         // need to recalculate shipping rates
         if (typeof currentCart.workflow === "object" &&
-        typeof currentCart.workflow.workflow === "object") {
+          typeof currentCart.workflow.workflow === "object") {
           if (currentCart.workflow.workflow.length > 2) {
             Meteor.call("workflow/revertCartWorkflow", "coreCheckoutShipping");
             // refresh shipping quotes
@@ -228,7 +228,7 @@ Meteor.methods({
    * Declaration to keep it more secure
    * @returns {String} cartId - users cartId
    */
-  "cart/createCart": function (userId, sessionId) {
+  "cart/createCart": function(userId, sessionId) {
     check(userId, String);
     check(sessionId, String);
 
@@ -249,13 +249,13 @@ Meteor.methods({
       sessionId: sessionId,
       userId: userId
     });
-    Logger.debug("create cart: into new user cart. created: " +  currentCartId +
+    Logger.debug("create cart: into new user cart. created: " + currentCartId +
       " for user " + userId);
 
     // merge session carts into the current cart
     if (sessionCartCount > 0 && !anonymousUser) {
-      Logger.debug("create cart: found existing cart. merge into " + currentCartId
-        + " for user " + userId);
+      Logger.debug("create cart: found existing cart. merge into " + currentCartId +
+        " for user " + userId);
       Meteor.call("cart/mergeCart", currentCartId, sessionId);
     }
 
@@ -288,7 +288,7 @@ Meteor.methods({
    *  @param {Number} [itemQty] - qty to add to cart
    *  @return {Number|Object} Mongo insert response
    */
-  "cart/addToCart": function (productId, variantId, itemQty) {
+  "cart/addToCart": function(productId, variantId, itemQty) {
     check(productId, String);
     check(variantId, String);
     check(itemQty, Match.Optional(Number));
@@ -305,10 +305,14 @@ Meteor.methods({
     // `quantityProcessing`?
     let product;
     let variant;
-    Collections.Products.find({ _id: { $in: [
-      productId,
-      variantId
-    ] } }).forEach(doc => {
+    Collections.Products.find({
+      _id: {
+        $in: [
+          productId,
+          variantId
+        ]
+      }
+    }).forEach(doc => {
       if (doc.type === "simple") {
         product = doc;
       } else {
@@ -343,7 +347,7 @@ Meteor.methods({
         $inc: {
           "items.$.quantity": quantity
         }
-      }, function (error, result) {
+      }, function(error, result) {
         if (error) {
           Logger.warn("error adding to cart",
             Collections.Cart.simpleSchema().namedContext().invalidKeys());
@@ -376,10 +380,11 @@ Meteor.methods({
           quantity: quantity,
           variants: variant,
           title: product.title,
+          reactionVendorId: product.reactionVendorId,
           type: product.type
         }
       }
-    }, function (error, result) {
+    }, function(error, result) {
       if (error) {
         Logger.error(error);
         Logger.error(Collections.Cart.simpleSchema().namedContext().invalidKeys(),
@@ -407,7 +412,7 @@ Meteor.methods({
    * @param {Number} [quantity] - if provided will adjust increment by quantity
    * @returns {Number} returns Mongo update result
    */
-  "cart/removeFromCart": function (itemId, quantity) {
+  "cart/removeFromCart": function(itemId, quantity) {
     check(itemId, String);
     check(quantity, Match.Optional(Number));
 
@@ -492,7 +497,7 @@ Meteor.methods({
    * @param {String} cartId - cartId to transform to order
    * @return {String} returns orderId
    */
-  "cart/copyCartToOrder": function (cartId) {
+  "cart/copyCartToOrder": function(cartId) {
     check(cartId, String);
     const cart = Collections.Cart.findOne(cartId);
     // security check
@@ -553,7 +558,7 @@ Meteor.methods({
     const expandedItems = [];
 
     // init item level workflow
-    _.each(order.items, function (item) {
+    _.each(order.items, function(item) {
       // Split items based on their quantity
       for (let i = 0; i < item.quantity; i++) {
         // Clone Item
@@ -647,7 +652,7 @@ Meteor.methods({
    * @param {Object} method - shipmentMethod object
    * @return {Number} return Mongo update result
    */
-  "cart/setShipmentMethod": function (cartId, method) {
+  "cart/setShipmentMethod": function(cartId, method) {
     check(cartId, String);
     check(method, Object);
     // get current cart
@@ -708,7 +713,7 @@ Meteor.methods({
    * @param {String} cartId - cart _id
    * @return {Number} update result
    */
-  "cart/resetShipmentMethod": function (cartId) {
+  "cart/resetShipmentMethod": function(cartId) {
     check(cartId, String);
 
     const cart = Collections.Cart.findOne({
@@ -733,7 +738,7 @@ Meteor.methods({
    * @param {Object} address - addressBook object
    * @return {Number} update result
    */
-  "cart/setShipmentAddress": function (cartId, address) {
+  "cart/setShipmentAddress": function(cartId, address) {
     check(cartId, String);
     check(address, Reaction.Schemas.Address);
 
@@ -817,7 +822,7 @@ Meteor.methods({
    * @todo maybe we need to rename this method to `cart/setBillingAddress`?
    * @return {Number} return Mongo update result
    */
-  "cart/setPaymentAddress": function (cartId, address) {
+  "cart/setPaymentAddress": function(cartId, address) {
     check(cartId, String);
     check(address, Reaction.Schemas.Address);
 
@@ -874,7 +879,7 @@ Meteor.methods({
    * @return {Number|Object|Boolean} The number of removed documents or error
    * object or `false` if we don't need to update cart
    */
-  "cart/unsetAddresses": function (addressId, userId, type) {
+  "cart/unsetAddresses": function(addressId, userId, type) {
     check(addressId, String);
     check(userId, String);
     check(type, Match.Optional(String));
@@ -941,7 +946,7 @@ Meteor.methods({
    * directly within this method, just throw down though hooks
    * @return {String} returns update result
    */
-  "cart/submitPayment": function (paymentMethod) {
+  "cart/submitPayment": function(paymentMethod) {
     check(paymentMethod, Reaction.Schemas.PaymentMethod);
 
     const checkoutCart = Collections.Cart.findOne({

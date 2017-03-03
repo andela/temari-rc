@@ -1,4 +1,4 @@
-import _ from  "lodash";
+import _ from "lodash";
 import { EJSON } from "meteor/ejson";
 import { check } from "meteor/check";
 import { Meteor } from "meteor/meteor";
@@ -74,8 +74,8 @@ function createTitle(newTitle, productId) {
 
   // we should check again if there are any new matches with DB
   if (Products.find({
-    title: title
-  }).count() !== 0) {
+      title: title
+    }).count() !== 0) {
     title = createTitle(title, productId);
   }
   return title;
@@ -131,8 +131,8 @@ function createHandle(productHandle, productId) {
 
   // we should check again if there are any new matches with DB
   if (Products.find({
-    handle: handle
-  }).count() !== 0) {
+      handle: handle
+    }).count() !== 0) {
     handle = createHandle(handle, productId);
   }
 
@@ -150,7 +150,7 @@ function createHandle(productHandle, productId) {
 function copyMedia(newId, variantOldId, variantNewId) {
   Media.find({
     "metadata.variantId": variantOldId
-  }).forEach(function (fileObj) {
+  }).forEach(function(fileObj) {
     // Copy File and insert directly, bypasing revision control
     copyFile(fileObj, {
       productId: newId,
@@ -309,7 +309,7 @@ Meteor.methods({
    * @todo rewrite @description
    * @return {Array} - list with cloned variants _ids
    */
-  "products/cloneVariant": function (productId, variantId) {
+  "products/cloneVariant": function(productId, variantId) {
     check(productId, String);
     check(variantId, String);
     // user needs createProduct permission to clone
@@ -396,7 +396,7 @@ Meteor.methods({
    * @param {Object} [newVariant] - variant object
    * @return {String} new variantId
    */
-  "products/createVariant": function (parentId, newVariant) {
+  "products/createVariant": function(parentId, newVariant) {
     check(parentId, String);
     check(newVariant, Match.Optional(Object));
     // must have createProduct permissions
@@ -454,7 +454,7 @@ Meteor.methods({
    * updateProductField", but it still used
    * @return {Number} returns update result
    */
-  "products/updateVariant": function (variant) {
+  "products/updateVariant": function(variant) {
     check(variant, Object);
     // must have createProduct permissions
     if (!Reaction.hasPermission("createProduct")) {
@@ -497,7 +497,7 @@ Meteor.methods({
    * @returns {Boolean} returns update results: `true` - if at least one variant
    * was removed or `false` if nothing was removed
    */
-  "products/deleteVariant": function (variantId) {
+  "products/deleteVariant": function(variantId) {
     check(variantId, String);
     // must have createProduct permissions
     if (!Reaction.hasPermission("createProduct")) {
@@ -535,7 +535,7 @@ Meteor.methods({
    * @param {Array} productOrArray - products array to clone
    * @returns {Array} returns insert results
    */
-  "products/cloneProduct": function (productOrArray) {
+  "products/cloneProduct": function(productOrArray) {
     check(productOrArray, Match.OneOf(Array, Object));
     // must have createProduct permissions
     if (!Reaction.hasPermission("createProduct")) {
@@ -549,7 +549,7 @@ Meteor.methods({
     const pool = []; // pool of id pairs: { oldId, newId }
 
     function getIds(id) {
-      return pool.filter(function (pair) {
+      return pool.filter(function(pair) {
         return pair.oldId === this.id;
       }, {
         id: id
@@ -650,7 +650,7 @@ Meteor.methods({
    * @param {Object} [product] - optional product object
    * @return {String} return insert result
    */
-  "products/createProduct": function (product) {
+  "products/createProduct": function(product) {
     check(product, Match.Optional(Object));
     // must have createProduct permission
     if (!Reaction.hasPermission("createProduct")) {
@@ -661,9 +661,20 @@ Meteor.methods({
     if (product) {
       return Products.insert(product);
     }
-
+    let reactionVendor = undefined;
+    let shopName = "admin";
+    let shopId = "admin";
+    Meteor.call("vendor/getVendorDetails", function(err, result) {
+      reactionVendor = result;
+    });
+    if (reactionVendor) {
+      shopName = reactionVendor.shopName;
+      shopId = reactionVendor._id;
+    }
     return Products.insert({
-      type: "simple" // needed for multi-schema
+      type: "simple", // needed for multi-schema
+      reactionVendor: shopName || "admin",
+      reactionVendorId: shopId || "admin"
     }, {
       validate: false
     }, (error, result) => {
@@ -673,6 +684,8 @@ Meteor.methods({
           ancestors: [result],
           price: 0.00,
           title: "",
+          reactionVendor: shopName || "admin",
+          reactionVendorId: shopId || "admin",
           type: "variant" // needed for multi-schema
         });
       }
@@ -685,7 +698,7 @@ Meteor.methods({
    * @param {String} productId - productId to delete
    * @returns {Number} returns number of removed products
    */
-  "products/deleteProduct": function (productId) {
+  "products/deleteProduct": function(productId) {
     check(productId, Match.OneOf(Array, String));
     // must have admin permission to delete
     if (!Reaction.hasPermission("createProduct") && !Reaction.hasAdminAccess()) {
@@ -765,7 +778,7 @@ Meteor.methods({
    * latest changes. its used for products and variants
    * @return {Number} returns update result
    */
-  "products/updateProductField": function (_id, field, value) {
+  "products/updateProductField": function(_id, field, value) {
     check(_id, String);
     check(field, String);
     check(value, Match.OneOf(String, Object, Array, Boolean));
@@ -810,7 +823,7 @@ Meteor.methods({
    * @param {String} tagId - tagId
    * @return {Number} return result
    */
-  "products/updateProductTags": function (productId, tagName, tagId) {
+  "products/updateProductTags": function(productId, tagName, tagId) {
     check(productId, String);
     check(tagName, String);
     check(tagId, Match.OneOf(String, null));
@@ -879,7 +892,7 @@ Meteor.methods({
    * @param {String} tagId - tagId
    * @return {String} return update result
    */
-  "products/removeProductTag": function (productId, tagId) {
+  "products/removeProductTag": function(productId, tagId) {
     check(productId, String);
     check(tagId, String);
     if (!Reaction.hasPermission("createProduct")) {
@@ -903,7 +916,7 @@ Meteor.methods({
    * @param {String} productId - productId
    * @returns {String} handle - product handle
    */
-  "products/setHandle": function (productId) {
+  "products/setHandle": function(productId) {
     check(productId, String);
     // must have createProduct permission
     if (!Reaction.hasPermission("createProduct")) {
@@ -930,7 +943,7 @@ Meteor.methods({
    * @param {String} tagId - tagId
    * @return {String} return update result
    */
-  "products/setHandleTag": function (productId, tagId) {
+  "products/setHandleTag": function(productId, tagId) {
     check(productId, String);
     check(tagId, String);
     // must have createProduct permission
@@ -984,7 +997,7 @@ Meteor.methods({
    * shop name as base `positions` name. Could be useful for multi-shopping.
    * @return {Number} collection update returns
    */
-  "products/updateProductPosition": function (productId, positionData, tag) {
+  "products/updateProductPosition": function(productId, positionData, tag) {
     check(productId, String);
     check(positionData, Object);
     check(tag, String);
@@ -1045,7 +1058,7 @@ Meteor.methods({
    * @since 0.11.0
    * @return {Number} Products.update result
    */
-  "products/updateVariantsPosition": function (sortedVariantIds) {
+  "products/updateVariantsPosition": function(sortedVariantIds) {
     check(sortedVariantIds, [String]);
     // TODO: to make this work we need to remove auditArgumentsCheck I suppose
     // new SimpleSchema({
@@ -1084,7 +1097,7 @@ Meteor.methods({
    * @todo should this method works for variants also?
    * @return {Number} collection update result
    */
-  "products/updateMetaFields": function (productId, updatedMeta, meta) {
+  "products/updateMetaFields": function(productId, updatedMeta, meta) {
     check(productId, String);
     check(updatedMeta, Object);
     check(meta, Match.OneOf(Object, Number, undefined, null));
@@ -1143,7 +1156,7 @@ Meteor.methods({
    * @param {Object} type - optional product type for schema selection
    * @return {Number} collection update result
    */
-  "products/removeMetaFields": function (productId, metafields, type = "simple") {
+  "products/removeMetaFields": function(productId, metafields, type = "simple") {
     check(productId, String);
     check(metafields, Object);
     check(type, String);
@@ -1170,7 +1183,7 @@ Meteor.methods({
    * @param {String} productId - productId
    * @return {Boolean} product.isVisible
    */
-  "products/publishProduct": function (productId) {
+  "products/publishProduct": function(productId) {
     check(productId, String);
     if (!Reaction.hasPermission("createProduct")) {
       throw new Meteor.Error(403, "Access Denied");
@@ -1241,7 +1254,7 @@ Meteor.methods({
    * @param {String} productId - productId
    * @return {Boolean} product.isVisible
    */
-  "products/toggleVisibility": function (productId) {
+  "products/toggleVisibility": function(productId) {
     check(productId, String);
     if (!Reaction.hasPermission("createProduct")) {
       throw new Meteor.Error(403, "Access Denied");

@@ -3,7 +3,7 @@ import { Template } from "meteor/templating";
 import { ReactiveDict } from "meteor/reactive-dict";
 import { IconButton } from "/imports/plugins/core/ui/client/components";
 
-Template.gridControls.onCreated(function () {
+Template.gridControls.onCreated(function() {
   this.state = new ReactiveDict();
 
   this.autorun(() => {
@@ -14,13 +14,28 @@ Template.gridControls.onCreated(function () {
   });
 });
 
-Template.gridControls.onRendered(function () {
+Template.gridControls.onRendered(function() {
   return this.$("[data-toggle='tooltip']").tooltip({
     position: "top"
   });
 });
 
 Template.gridControls.helpers({
+  isVendorProduct() {
+    if (Reaction.hasOwnerAccess() || Reaction.hasAdminAccess()) {
+      return true;
+    }
+    const instance = Template.instance();
+
+    const productId = instance.data.product._id;
+    const product = Collections.Products.findOne({
+      _id: productId,
+      reactionVendorId: Meteor.userId()
+    });
+    if (product) return true;
+    return false;
+  },
+
   EditButton() {
     const instance = Template.instance();
     const isSelected = instance.state.equals("isSelected", true);
@@ -57,7 +72,7 @@ Template.gridControls.helpers({
     };
   },
 
-  checked: function () {
+  checked: function() {
     return Template.instance().state.equals("isSelected", true);
   }
 });

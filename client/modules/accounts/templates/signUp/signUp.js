@@ -16,7 +16,7 @@ Template.loginFormSignUpView.onCreated(() => {
  */
 Template.loginFormSignUpView.helpers(LoginFormSharedHelpers);
 
-Template.loginFormSignUpView.onRendered(function () {
+Template.loginFormSignUpView.onRendered(function() {
   $(".vendor-form").css("display", "none");
 });
 /**
@@ -29,7 +29,7 @@ Template.loginFormSignUpView.events({
    * @param  {Template} template - Blaze Template
    * @return {void}
    */
-  "submit form": function (event, template) {
+  "submit form": function(event, template) {
     event.preventDefault();
 
     const usernameInput = template.$(".login-input-username");
@@ -68,28 +68,30 @@ Template.loginFormSignUpView.events({
       shopPhone = template.$(".shop-phone").val().trim();
       shopAddress = template.$(".shop-address").val().trim();
 
-      // const validatedShopName = LoginFormValidation.shopName(shopName);
-      // const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
-      // const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
+      const validatedShopName = LoginFormValidation.shopName(shopName);
+      const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
+      const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
 
-      // if (validatedShopName !== true) {
-      //   errors.shopName = validatedShopName;
-      // }
+      if (validatedShopName !== true) {
+        errors.shopName = validatedShopName;
+      }
 
-      // if (validatedShopPhone !== true) {
-      //   errors.shopPhone = validatedShopPhone;
-      // }
+      if (validatedShopPhone !== true) {
+        errors.shopPhone = validatedShopPhone;
+      }
 
-      // if (validatedShopAddress !== true) {
-      //   errors.shopAddress = validatedShopAddress;
-      // }
+      if (validatedShopAddress !== true) {
+        errors.shopAddress = validatedShopAddress;
+      }
 
-      vendorDetails = { vendorDetails: [{
-        shopName: shopName,
-        shopPhone: shopPhone,
-        shopAddress: shopAddress,
-        isVendor: true,
-        shopActive: false }]
+      vendorDetails = {
+        vendorDetails: [{
+          shopName: shopName,
+          shopPhone: shopPhone,
+          shopAddress: shopAddress,
+          isVendor: true,
+          shopActive: false
+        }]
       };
     }
 
@@ -109,7 +111,7 @@ Template.loginFormSignUpView.events({
       password: password,
       profile: vendorDetails
     };
-    Accounts.createUser(newUserData, function (error) {
+    Accounts.createUser(newUserData, function(error) {
       if (error) {
         // Show some error message
         templateInstance.formMessages.set({
@@ -121,13 +123,13 @@ Template.loginFormSignUpView.events({
     });
   },
 
-  "change .chooseSignupType": function (event, template) {
+  "change .chooseSignupType": function(event, template) {
     const element = template.find("input:radio[name=role]:checked");
     const value = $(element).val();
     if (value === "asVendor") {
       $(".vendor-form").css("display", "block");
       Session.set("signupas", "Vendor");
-    }    else {
+    } else {
       $(".vendor-form").css("display", "none");
       Session.set("signupas", "Customer");
     }

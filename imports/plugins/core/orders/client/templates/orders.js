@@ -16,7 +16,7 @@ const orderFilters = [{
   label: "Completed"
 }];
 
-const OrderHelper =  {
+const OrderHelper = {
   makeQuery(filter) {
     let query = {};
 
@@ -28,21 +28,21 @@ const OrderHelper =  {
         };
         break;
 
-      // Orders that have yet to be captured & shipped
+        // Orders that have yet to be captured & shipped
       case "processing":
         query = {
           "workflow.status": "coreOrderWorkflow/processing"
         };
         break;
 
-      // Orders that have been shipped, based on if the items have been shipped
+        // Orders that have been shipped, based on if the items have been shipped
       case "shipped":
         query = {
           "items.workflow.status": "coreOrderItemWorkflow/shipped"
         };
         break;
 
-      // Orders that are complete, including all items with complete status
+        // Orders that are complete, including all items with complete status
       case "completed":
         query = {
           "workflow.status": "coreOrderWorkflow/completed",
@@ -52,7 +52,7 @@ const OrderHelper =  {
         };
         break;
 
-      // Orders that have been captured, but not yet shipped
+        // Orders that have been captured, but not yet shipped
       case "captured":
         query = {
           "billing.paymentMethod.status": "completed",
@@ -66,7 +66,7 @@ const OrderHelper =  {
         };
         break;
 
-      // Orders that have been refunded partially or fully
+        // Orders that have been refunded partially or fully
       case "refunded":
         query = {
           "billing.paymentMethod.status": "captured",
@@ -75,12 +75,15 @@ const OrderHelper =  {
         break;
       default:
     }
-
+    const isVendor = Roles.userIsInRole(Meteor.userId(), ["vendor"], Reaction.shopId);
+    if (isVendor) {
+      query["items.0.reactionVendorId"] = Meteor.userId();
+    }
     return query;
   }
 };
 
-Template.orders.onCreated(function () {
+Template.orders.onCreated(function() {
   this.state = new ReactiveDict();
   this.state.setDefault({
     orders: []
@@ -168,7 +171,7 @@ Template.ordersListItem.helpers({
 });
 
 Template.ordersListItem.events({
-  "click [data-event-action=selectOrder]": function (event) {
+  "click [data-event-action=selectOrder]": function(event) {
     event.preventDefault();
     const instance = Template.instance();
     const isActionViewOpen = Reaction.isActionViewOpen();
@@ -188,7 +191,7 @@ Template.ordersListItem.events({
       _id: instance.data.order._id
     });
   },
-  "click [data-event-action=startProcessingOrder]": function (event) {
+  "click [data-event-action=startProcessingOrder]": function(event) {
     event.preventDefault();
     const instance = Template.instance();
     const isActionViewOpen = Reaction.isActionViewOpen();
@@ -226,7 +229,7 @@ Template.ordersListItem.events({
   }
 });
 
-Template.orderListFilters.onCreated(function () {
+Template.orderListFilters.onCreated(function() {
   this.state = new ReactiveDict();
 
   this.autorun(() => {
@@ -284,7 +287,7 @@ Template.orderListFilters.helpers({
  *
  * @returns orderStatusDetails
  */
-Template.orderStatusDetail.onCreated(function () {
+Template.orderStatusDetail.onCreated(function() {
   this.state = new ReactiveDict();
   this.state.setDefault({
     orders: []
@@ -312,11 +315,11 @@ Template.orderStatusDetail.helpers({
     return amount;
   },
   // order age helper
-  orderAge: function () {
+  orderAge: function() {
     return moment(this.createdAt).fromNow();
   },
 
-  shipmentTracking: function () {
+  shipmentTracking: function() {
     if (this.shipping[0].tracking) {
       return this.shipping[0].tracking;
     }
