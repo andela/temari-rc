@@ -2,6 +2,7 @@ import React, { Children, Component, PropTypes } from "react";
 import { Reaction } from "/client/api";
 import { EditButton, VisibilityButton, Translation } from "/imports/plugins/core/ui/client/components";
 import { composeWithTracker } from "/lib/api/compose";
+import * as Collections from "/lib/collections";
 
 class EditContainer extends Component {
 
@@ -119,6 +120,7 @@ class EditContainer extends Component {
   render() {
     // Display edit button if the permissions allow it.
     if (this.props.hasPermission) {
+
       // If children were passed as props to this component,
       // copy the children and inject the edit buttons
       if (this.props.children) {
@@ -165,11 +167,12 @@ EditContainer.propTypes = {
 function composer(props, onData) {
   let hasPermission;
   const viewAs = Reaction.Router.getQueryParam("as");
-
   if (props.disabled === true || viewAs === "customer") {
     hasPermission = false;
   } else {
-    hasPermission = Reaction.hasPermission(props.premissions);
+    if (editPermission() || Reaction.hasAdminAccess()) {
+      hasPermission = Reaction.hasPermission(props.permissions);
+    }
   }
 
   onData(null, {
@@ -177,4 +180,22 @@ function composer(props, onData) {
   });
 }
 
+function editPermission() {
+  let canEditProduct = false;
+  let vendor;
+  let product;
+  let vendorShopName;
+  let productVendor;
+  if (Roles.userIsInRole(Meteor.userId(), ["vendor"], Reaction.shopId)) {
+    vendor = Collections.Accounts.findOne({userId: Meteor.userId()});
+    vendorShopName = vendor.profile.vendorDetails[0].shopName;
+    product = Collections.Products.findOne({ vendor: vendorShopName });
+    productVendor = product ? product.vendor : null;
+
+    if (vendorShopName === productVendor) {
+      canEditProduct = true;
+    }
+  }
+  return canEditProduct;
+}
 export default composeWithTracker(composer)(EditContainer);

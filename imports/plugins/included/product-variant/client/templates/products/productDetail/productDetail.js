@@ -11,6 +11,7 @@ import { EditButton } from "/imports/plugins/core/ui/client/components";
 import { PublishContainer } from "/imports/plugins/core/revisions";
 import { ProductDetailContainer } from "/imports/plugins/included/product-detail-simple/client/containers";
 import { isRevisionControlEnabled } from "/imports/plugins/core/revisions/lib/api";
+import * as Collections from "/lib/collections";
 
 Template.productDetail.onCreated(function () {
   this.state = new ReactiveDict();
@@ -471,6 +472,7 @@ Template.productDetailForm.helpers({
     return product.title || i18next.t("productDetailEdit.untitledProduct", "Untitled Product");
   }
 });
+
 
 Template.productDetailForm.events({
   "click [data-event-action=publishProduct]": function (event, instance) {

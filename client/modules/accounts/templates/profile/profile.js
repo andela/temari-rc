@@ -88,16 +88,16 @@ Template.vendorForm.events({
     shopPhone = template.$(".shop-phone").val().trim();
     shopAddress = template.$(".shop-address").val().trim();
 
-    // const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
-    // const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
+    const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
+    const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
 
-    // if (validatedShopPhone !== true) {
-    //   errors.shopPhone = validatedShopPhone;
-    // }
+    if (validatedShopPhone !== true) {
+      errors.shopPhone = validatedShopPhone;
+    }
 
-    // if (validatedShopAddress !== true) {
-    //   errors.shopAddress = validatedShopAddress;
-    // }
+    if (validatedShopAddress !== true) {
+      errors.shopAddress = validatedShopAddress;
+    }
 
     vendorDetails = {
       vendorDetails: [{
@@ -117,12 +117,8 @@ Template.vendorForm.events({
 });
 
 Template.upgradeToVendor.events({
-  // "click .upgrade-toggle": function() {
-  //   $("#upgrade-form").toggleClass("upgrade-form-visible");
-  //   $(".upgrade-toggle").toggleClass("upgrade-form-visible");
-  // },
 
-  "click .upgrade-vendor": function(event, template) {
+  "click .upgrade-vendor": function (event, template) {
     let vendorDetails = {};
     const errors = {};
 
@@ -130,21 +126,21 @@ Template.upgradeToVendor.events({
     shopPhone = template.$(".shop-phone").val().trim();
     shopAddress = template.$(".shop-address").val().trim();
 
-    // const validatedShopName = LoginFormValidation.shopName(shopName);
-    // const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
-    // const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
+    const validatedShopName = LoginFormValidation.shopName(shopName);
+    const validatedShopPhone = LoginFormValidation.shopPhone(shopPhone);
+    const validatedShopAddress = LoginFormValidation.shopAddress(shopAddress);
 
-    // if (validatedShopName !== true) {
-    //   errors.shopName = validatedShopName;
-    // }
+    if (validatedShopName !== true) {
+      errors.shopName = validatedShopName;
+    }
 
-    // if (validatedShopPhone !== true) {
-    //   errors.shopPhone = validatedShopPhone;
-    // }
+    if (validatedShopPhone !== true) {
+      errors.shopPhone = validatedShopPhone;
+    }
 
-    // if (validatedShopAddress !== true) {
-    //   errors.shopAddress = validatedShopAddress;
-    // }
+    if (validatedShopAddress !== true) {
+      errors.shopAddress = validatedShopAddress;
+    }
 
     vendorDetails = {
       vendorDetails: [{
