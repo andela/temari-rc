@@ -11,6 +11,8 @@ import "./templates/layout/header/brand.html";
 import "./templates/layout/header/button.html";
 import "./templates/layout/header/header.html";
 import "./templates/layout/header/header.js";
+import "./templates/layout/howItWorks/howItWorks.html";
+import "./templates/layout/howItWorks/howItWorks.js";
 import "./templates/layout/header/tags.html";
 import "./templates/layout/loading/loading.html";
 import "./templates/layout/notFound/notFound.html";

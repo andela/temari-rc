@@ -17,6 +17,10 @@
   text-decoration: none;
 }
 
+.rui.navbar a:hover{
+  color: @light-blue;
+}
+
 .rui.navbar .showmenu {
   display: none;
   .flex(0 0 auto);
@@ -63,11 +67,12 @@
 }
 
 .rui.navbar .dropdown a {
-  color: @link-color;
+  color: @dark-blue;
 }
 
 .rui.navbar .dropdown .dropdown-menu > .active > a{
   color: @white;
+  background-color: @dark-blue;
 }
 
 .rui.navbar .dropdown {
@@ -102,6 +107,7 @@
 .rui.navbar .languages li,
 .rui.navbar .languages .menu-item {
   .text-align(left);
+  color: @light-blue;
 }
 
 .rui.navbar .accounts {
