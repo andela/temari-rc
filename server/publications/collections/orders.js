@@ -5,7 +5,7 @@ import { Reaction } from "/server/api";
  * orders
  */
 
-Meteor.publish("Orders", function () {
+Meteor.publish("Orders", function() {
   if (this.userId === null) {
     return this.ready();
   }
@@ -13,7 +13,7 @@ Meteor.publish("Orders", function () {
   if (!shopId) {
     return this.ready();
   }
-  if (Roles.userIsInRole(this.userId, ["admin", "owner"], shopId)) {
+  if (Roles.userIsInRole(this.userId, ["admin", "owner", "vendor"], shopId)) {
     return Orders.find({
       shopId: shopId
     });
@@ -27,7 +27,7 @@ Meteor.publish("Orders", function () {
 /**
  * account orders
  */
-Meteor.publish("AccountOrders", function (userId, currentShopId) {
+Meteor.publish("AccountOrders", function(userId, currentShopId) {
   check(userId, Match.OptionalOrNull(String));
   check(currentShopId, Match.OptionalOrNull(String));
   if (this.userId === null) {
@@ -49,7 +49,7 @@ Meteor.publish("AccountOrders", function (userId, currentShopId) {
 /**
  * completed cart order
  */
-Meteor.publish("CompletedCartOrder", function (userId, cartId) {
+Meteor.publish("CompletedCartOrder", function(userId, cartId) {
   check(userId, Match.OneOf(String, null));
   check(cartId, String);
   if (this.userId === null) {

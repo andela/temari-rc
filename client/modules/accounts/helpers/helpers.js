@@ -1,10 +1,11 @@
 import _ from "lodash";
 import { ServiceConfigHelper } from "./util";
 import { Template } from "meteor/templating";
+import * as Collections from "/lib/collections";
 
 export const LoginFormSharedHelpers = {
 
-  messages: function () {
+  messages: function() {
     return Template.instance().formMessages.get();
   },
 
@@ -22,7 +23,7 @@ export const LoginFormSharedHelpers = {
     return Template.instance().formErrors.get();
   },
 
-  uniqueId: function () {
+  uniqueId: function() {
     return Template.instance().uniqueId;
   },
 
@@ -43,5 +44,12 @@ export const LoginFormSharedHelpers = {
 
   hasPasswordService() {
     return !!Package["accounts-password"];
+  },
+  shopDetails() {
+    const account = Collections.Accounts.findOne();
+    if (account.profile.vendorDetails) {
+      return account.profile.vendorDetails[0];
+    }
+    return false;
   }
 };

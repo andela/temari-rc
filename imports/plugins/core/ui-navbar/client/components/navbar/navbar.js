@@ -2,9 +2,9 @@ import { FlatButton } from "/imports/plugins/core/ui/client/components";
 import { NotificationContainer } from "/imports/plugins/included/notifications/client/containers";
 import { Reaction } from "/client/api";
 import { Tags } from "/lib/collections";
+import * as Collections from "/lib/collections";
 
-
-Template.CoreNavigationBar.onCreated(function () {
+Template.CoreNavigationBar.onCreated(function() {
   this.state = new ReactiveDict();
   const searchPackage = Reaction.Apps({ provides: "ui-search" });
   if (searchPackage.length) {
@@ -19,24 +19,23 @@ Template.CoreNavigationBar.onCreated(function () {
  * layoutHeader events
  */
 Template.CoreNavigationBar.events({
-  "click .navbar-accounts .dropdown-toggle": function () {
-    return setTimeout(function () {
+  "click .navbar-accounts .dropdown-toggle": function() {
+    return setTimeout(function() {
       return $("#login-email").focus();
     }, 100);
   },
-  "click .header-tag, click .navbar-brand": function () {
+  "click .header-tag, click .navbar-brand": function() {
     return $(".dashboard-navbar-packages ul li").removeClass("active");
   },
-  "click .search": function () {
+  "click .search": function() {
     const instance = Template.instance();
     const searchTemplateName = instance.state.get("searchTemplate");
     const searchTemplate = Template[searchTemplateName];
-    Blaze.renderWithData(searchTemplate, {
-    }, $("body").get(0));
+    Blaze.renderWithData(searchTemplate, {}, $("body").get(0));
     $("body").css("overflow", "hidden");
     $("#search-input").focus();
   },
-  "click .notification-icon": function () {
+  "click .notification-icon": function() {
     $("body").css("overflow", "hidden");
     $("#notify-dropdown").focus();
   }
@@ -54,7 +53,14 @@ Template.CoreNavigationBar.helpers({
       return instance.state.get("searchTemplate");
     }
   },
-
+  shopDetails() {
+    let account;
+    if (Roles.userIsInRole(Meteor.userId(), ["vendor"], Reaction.shopId)) {
+      account = Collections.Accounts.findOne({ userId: Meteor.userId() });
+      return account.profile.vendorDetails[0];
+    }
+    return false;
+  },
   IconButtonComponent() {
     return {
       component: FlatButton,

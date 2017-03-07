@@ -7,7 +7,7 @@ import { RevisionApi } from "/imports/plugins/core/revisions/lib/api/revisions";
  * @param {String} productId - productId or handle
  * @return {Object} return product cursor
  */
-Meteor.publish("Product", function (productId) {
+Meteor.publish("Product", function(productId) {
   check(productId, Match.OptionalOrNull(String));
   if (!productId) {
     Logger.info("ignoring null request on Product subscription");
@@ -30,6 +30,14 @@ Meteor.publish("Product", function (productId) {
       $in: [true, false]
     };
   }
+
+  if (Roles.userIsInRole(this.userId, ["createProduct", "vendor"],
+      shop._id)) {
+    selector.isVisible = {
+      $in: [true, false]
+    };
+  }
+
   // TODO review for REGEX / DOS vulnerabilities.
   if (productId.match(/^[23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz]{17}$/)) {
     selector._id = productId;

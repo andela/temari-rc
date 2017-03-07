@@ -5,6 +5,7 @@ import { Products, Tags } from "/lib/collections";
 import { Session } from "meteor/session";
 import { Template } from "meteor/templating";
 import { ITEMS_INCREMENT } from "/client/config/defaults";
+import * as Collections from "/lib/collections";
 
 /**
  * loadMoreProducts
@@ -39,7 +40,7 @@ function loadMoreProducts() {
 }
 
 
-Template.products.onCreated(function () {
+Template.products.onCreated(function() {
   this.products = ReactiveVar();
   this.state = new ReactiveDict();
   this.state.setDefault({
@@ -55,6 +56,7 @@ Template.products.onCreated(function () {
   // Update product subscription
   this.autorun(() => {
     const slug = Reaction.Router.getParam("slug");
+    const shopName = Reaction.Router.getParam("shopName");
     const tag = Tags.findOne({ slug: slug }) || Tags.findOne(slug);
     const scrollLimit = Session.get("productScrollLimit");
     let tags = {}; // this could be shop default implementation needed
@@ -85,17 +87,43 @@ Template.products.onCreated(function () {
     // we are caching `currentTag` or if we are not inside tag route, we will
     // use shop name as `base` name for `positions` object
     const currentTag = ReactionProduct.getTag();
-    const productCursor = Products.find({
-      ancestors: []
-      // keep this, as an example
-      // type: { $in: ["simple"] }
-    }, {
-      sort: {
-        [`positions.${currentTag}.position`]: 1,
-        [`positions.${currentTag}.createdAt`]: 1,
-        createdAt: 1
-      }
-    });
+    // const productCursor = Products.find({
+    //   ancestors: []
+    //     // keep this, as an example
+    //     // type: { $in: ["simple"] }
+    // }, {
+    //   sort: {
+    //     [`positions.${currentTag}.position`]: 1,
+    //     [`positions.${currentTag}.createdAt`]: 1,
+    //     createdAt: 1
+    //   }
+    // });
+    if (shopName) {
+      productCursor = Products.find({
+        ancestors: [],
+        reactionVendor: shopName
+          // keep this, as an example
+          // type: { $in: ["simple"] }
+      }, {
+        sort: {
+          [`positions.${currentTag}.position`]: 1,
+          [`positions.${currentTag}.createdAt`]: 1,
+          createdAt: 1
+        }
+      });
+    } else {
+      productCursor = Products.find({
+        ancestors: []
+          // keep this, as an example
+          // type: { $in: ["simple"] }
+      }, {
+        sort: {
+          [`positions.${currentTag}.position`]: 1,
+          [`positions.${currentTag}.createdAt`]: 1,
+          createdAt: 1
+        }
+      });
+    }
 
     const products = productCursor.map((product) => {
       return applyProductRevision(product);
@@ -120,7 +148,7 @@ Template.products.onRendered(() => {
 });
 
 Template.products.helpers({
-  tag: function () {
+  tag: function() {
     const id = Reaction.Router.getParam("_tag");
     return {
       tag: Tags.findOne({ slug: id }) || Tags.findOne(id)
@@ -162,15 +190,15 @@ Template.products.helpers({
  */
 
 Template.products.events({
-  "click #productListView": function () {
+  "click #productListView": function() {
     $(".product-grid").hide();
     return $(".product-list").show();
   },
-  "click #productGridView": function () {
+  "click #productGridView": function() {
     $(".product-list").hide();
     return $(".product-grid").show();
   },
-  "click .product-list-item": function () {
+  "click .product-list-item": function() {
     // go to new product
     Reaction.Router.go("product", {
       handle: this._id

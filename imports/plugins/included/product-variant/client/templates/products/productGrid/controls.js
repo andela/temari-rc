@@ -3,7 +3,7 @@ import { Template } from "meteor/templating";
 import { ReactiveDict } from "meteor/reactive-dict";
 import { IconButton } from "/imports/plugins/core/ui/client/components";
 
-Template.gridControls.onCreated(function () {
+Template.gridControls.onCreated(function() {
   this.state = new ReactiveDict();
 
   this.autorun(() => {
@@ -14,7 +14,7 @@ Template.gridControls.onCreated(function () {
   });
 });
 
-Template.gridControls.onRendered(function () {
+Template.gridControls.onRendered(function() {
   return this.$("[data-toggle='tooltip']").tooltip({
     position: "top"
   });
@@ -57,7 +57,7 @@ Template.gridControls.helpers({
     };
   },
 
-  checked: function () {
+  checked: function() {
     return Template.instance().state.equals("isSelected", true);
   }
 });

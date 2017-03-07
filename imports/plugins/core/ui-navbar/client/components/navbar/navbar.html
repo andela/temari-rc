@@ -1,8 +1,14 @@
-
 <template name="CoreNavigationBar">
   <div class="rui navbar">
     <div class="showmenu">{{> button icon="bars" onClick=onMenuButtonClick}}</div>
     {{> coreNavigationBrand}}
+     {{#if shopDetails}}
+    {{#with shopDetails}}
+    <a class="rui navbar my-shop-menu" href="/reaction/vendors/{{shopName}}"><div>
+      &nbsp; PERSONAL STORE
+    </div></a>
+    {{/with}}
+    {{/if}}
     <div class="menu">
       {{> tagNav tagNavProps}}
     </div>
