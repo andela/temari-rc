@@ -6,6 +6,7 @@ import Registry from "./registry";
 import Init from "./init";
 import Prerender from "./prerender";
 import { initTemplates } from "/server/api/core/templates";
+import RestApi from "./rest-endpoints";
 
 
 export default function () {
@@ -16,5 +17,6 @@ export default function () {
   Packages();
   Registry();
   Init();
+  RestApi();
   Prerender();
 }
