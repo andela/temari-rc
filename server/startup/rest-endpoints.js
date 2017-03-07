@@ -25,7 +25,7 @@ export default () => {
             }
             return {
               statusCode: 403,
-              message: ' You are not allowed to access this route '
+              message: 'You are not allowed to access this route '
             };
           }
         },
