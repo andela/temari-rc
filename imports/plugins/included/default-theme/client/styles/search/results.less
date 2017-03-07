@@ -24,7 +24,8 @@
   width: 100%;
   padding-top: 40px;
   padding-bottom: 40px;
-  background: @white;
+  background: @lighter-blue;
+  font-size: 16px;
   position:fixed;
   top: 0;
   display: -webkit-box;
@@ -46,14 +47,15 @@
 .rui.search-modal-input {
   width: 96%;
   position: relative;
-  border-bottom: 1px solid @black40;
+  border-bottom: 1px solid @white;
+  color: @dark-blue;
 
   .search-icon {
     font-size: 25px;
     position: absolute;
     .left(10px);
     top: 40px;
-    color: @black40;
+    color: @dark-blue;
   }
 
   .search-clear {
@@ -61,9 +63,9 @@
     position: absolute;
     .right(10px);
     top: 42px;
-    color: @black60;
+    color: @white;
     cursor: pointer;
-    background: @black10;
+    background: @dark-blue;
     padding-right: 15px;
     padding-left: 15px;
     padding-top: 2px;
@@ -72,7 +74,8 @@
     transition: background-color 200ms linear;
 
     &:hover {
-      background: @black25;
+      background: @light-blue;
+      color: @white;
     }
   }
 }
@@ -80,7 +83,7 @@
 .rui.search-modal-input label {
   font-weight: normal;
   text-transform: uppercase;
-  color: @black40;
+  color: @dark-blue;
 }
 .rui.search-modal-input input {
   width: 100%;

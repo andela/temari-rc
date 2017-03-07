@@ -20,6 +20,7 @@
       <span id="layout-alerts">{{> inlineAlerts}}</span>
       {{#if hasPermission 'guest'}}
         <!-- begin template region -->
+         {{> layoutHowItWorks }}
         {{> Template.dynamic template=template}}
         <!-- end template region -->
       {{/if}}
