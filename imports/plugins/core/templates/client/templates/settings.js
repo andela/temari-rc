@@ -9,7 +9,6 @@ import { EmailTemplates } from "../../lib/collections/schemas";
 import { i18next } from "/client/api";
 import { Templates } from "/lib/collections";
 
-
 /*
  * template templateSettings onCreated
  */
