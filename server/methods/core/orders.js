@@ -27,6 +27,45 @@ export function orderDebitMethod(order) {
  */
 export const methods = {
   /**
+   * orders/cancelOrder
+   * @summary cancel order
+   * @param {Object} order - order Object
+   * @returns {String} returns workflow update result
+   */
+  "orders/cancelOrder": function (order) {
+    console.log('Order::', order);
+    console.log(typeof order);
+    check(order, Object);
+
+    const cancelOrder = Orders.update({
+      "_id": order._id,
+      "shipping.0": { $exists: true }
+    }, {
+      $set: {
+        "workflow.status": "coreOrderWorkflow/canceled",
+        "shipping.$.packed": false
+      }
+    });
+    const productId = order.items[0].productId;
+    const itemQty = order.items[0].quantity;
+    console.log("whats the type", typeof cancelOrder);
+    check(cancelOrder, Number);
+    check(productId, String);
+    check(itemQty, Number);
+    if (cancelOrder === 0) {
+      return 0;
+    }
+    return Products.update({
+      _id: productId
+    }, {
+      $inc: {
+        inventoryQuantity: itemQty
+      }
+    });
+  },
+
+
+  /**
    * orders/shipmentTracking
    * @summary wraps addTracking and triggers workflow update
    * @param {Object} order - order Object
