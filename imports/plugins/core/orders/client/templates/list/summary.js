@@ -35,11 +35,15 @@ Template.ordersListSummary.events({
   "click #cancelOrder": (event) => {
     event.preventDefault();
     const order = Template.instance().orders.get();
-    console.log("where are u?", order);
     // Make a method call to the server-side to cancel order.
     Meteor.call("orders/cancelOrder", order, (err, result) => {
-      // result returns 1 if cancel order is succesful and 0 if false.
-      return (result === 1)
+      // result returns product if cancel order is succesful and 0 if false.
+
+      // @TODO: method updates products
+      // Meteor.call("orders/updateProduct", result, (error, res) => {
+      //   // Do nothing
+      // });
+      return (typeof result === "object")
         ? swal("", "Order Canceled", "success")
         : swal("", "Unable to Cancel", "error");
     });

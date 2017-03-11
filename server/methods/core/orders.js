@@ -33,8 +33,6 @@ export const methods = {
    * @returns {String} returns workflow update result
    */
   "orders/cancelOrder": function (order) {
-    console.log('Order::', order);
-    console.log(typeof order);
     check(order, Object);
 
     const cancelOrder = Orders.update({
@@ -48,22 +46,44 @@ export const methods = {
     });
     const productId = order.items[0].productId;
     const itemQty = order.items[0].quantity;
-    console.log("whats the type", typeof cancelOrder);
+
     check(cancelOrder, Number);
     check(productId, String);
     check(itemQty, Number);
     if (cancelOrder === 0) {
       return 0;
     }
-    return Products.update({
-      _id: productId
+    const product = Products.find({ _id: order.items[0].productId }).fetch();
+    if (product[0].inventoryQuantity) {
+      product[0].inventoryQuantity += itemQty;
+    }
+    return product[0];
+  },
+
+/**
+   * orders/updateProduct
+   * @summary update products
+   * @param {Object} product - product Object
+   * @returns {String} returns workflow update result
+   */
+  
+  // @TODO: Method should be used to update products
+
+  "orders/updateProduct": function (product) {
+    check(product, Object);
+    Products.upsert({
+      _id: product._id,
+      inventoryQuantity: { $exists: true }
     }, {
-      $inc: {
-        inventoryQuantity: itemQty
+      $set: {
+        inventoryQuantity: product.inventoryQuantity
+      }
+    }, {
+      selector: {
+        type: "variant"
       }
     });
   },
-
 
   /**
    * orders/shipmentTracking
