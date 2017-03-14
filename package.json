@@ -119,7 +119,6 @@
   },
 
   "scripts": {
-    "start": "meteor",
     "create-report": "allure generate allure-results/ -o ~/allure-report",
     "open-report": "cd && allure report open",
     "del-report": "rm -rf ~/allure-report && rm -rf allure-results",
