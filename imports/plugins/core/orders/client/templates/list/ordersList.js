@@ -34,3 +34,4 @@ Template.dashboardOrdersList.helpers({
     return shop !== null ? shop.name : void 0;
   }
 });
+

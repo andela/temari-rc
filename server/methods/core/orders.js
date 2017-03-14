@@ -27,6 +27,65 @@ export function orderDebitMethod(order) {
  */
 export const methods = {
   /**
+   * orders/cancelOrder
+   * @summary cancel order
+   * @param {Object} order - order Object
+   * @returns {String} returns workflow update result
+   */
+  "orders/cancelOrder": function (order) {
+    check(order, Object);
+
+    const cancelOrder = Orders.update({
+      "_id": order._id,
+      "shipping.0": { $exists: true }
+    }, {
+      $set: {
+        "workflow.status": "coreOrderWorkflow/canceled",
+        "shipping.$.packed": false
+      }
+    });
+    const productId = order.items[0].productId;
+    const itemQty = order.items[0].quantity;
+
+    check(cancelOrder, Number);
+    check(productId, String);
+    check(itemQty, Number);
+    if (cancelOrder === 0) {
+      return 0;
+    }
+    const product = Products.find({ _id: order.items[0].productId }).fetch();
+    if (product[0].inventoryQuantity) {
+      product[0].inventoryQuantity += itemQty;
+    }
+    return product[0];
+  },
+
+/**
+   * orders/updateProduct
+   * @summary update products
+   * @param {Object} product - product Object
+   * @returns {String} returns workflow update result
+   */
+  
+  // @TODO: Method should be used to update products
+
+  "orders/updateProduct": function (product) {
+    check(product, Object);
+    Products.upsert({
+      _id: product._id,
+      inventoryQuantity: { $exists: true }
+    }, {
+      $set: {
+        inventoryQuantity: product.inventoryQuantity
+      }
+    }, {
+      selector: {
+        type: "variant"
+      }
+    });
+  },
+
+  /**
    * orders/shipmentTracking
    * @summary wraps addTracking and triggers workflow update
    * @param {Object} order - order Object
