@@ -1,6 +1,6 @@
 import { Meteor } from "meteor/meteor";
 import { check, Match } from "meteor/check";
-import { Inventory } from "/lib/collections";
+import { Inventory, Products } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
 
@@ -64,7 +64,17 @@ Meteor.methods({
 
     // update inventory status for cartItems
     for (const item of cartItems) {
-      // check of existing reserved inventory for this cart
+      if (reservationStatus === "sold") {
+        const _id = item.productId;
+        const product = Products.findOne(_id);
+
+        if (product) {
+          const newQuantitySold = product.quantitySold + item.quantity;
+          const productUpdate = Object.assign({}, product, { quantitySold: newQuantitySold });
+          Products.upsert({ _id }, { $set: productUpdate }, { selector: { type: "simple" } });
+        }
+      }
+
       const existingReservations = Inventory.find({
         productId: item.productId,
         variantId: item.variants._id,
