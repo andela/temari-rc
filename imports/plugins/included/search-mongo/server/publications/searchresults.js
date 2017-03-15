@@ -34,7 +34,10 @@ getResults.products = function (searchTerm, facets, maxResults, userId) {
         hashtags: 1,
         description: 1,
         handle: 1,
-        price: 1
+        price: 1,
+        vendor: 1,
+        createdAt: 1,
+        quantitySold: 1
       },
       sort: { score: { $meta: "textScore" } },
       limit: maxResults
@@ -50,30 +53,43 @@ getResults.orders = function (searchTerm, facets, maxResults, userId) {
   const findTerm = {
     $and: [
       { shopId: shopId },
-      { $or: [
-        { _id: searchTerm },
-        { userEmails: {
-          $regex: searchTerm,
-          $options: "i"
-        } },
-        { shippingName: {
-          $regex: searchTerm,
-          $options: "i"
-        } },
-        { billingName: {
-          $regex: searchTerm,
-          $options: "i"
-        } },
-        { billingPhone: {
-          $regex: "^" + searchPhone + "$",
-          $options: "i"
-        } },
-        { shippingPhone: {
-          $regex: "^" + searchPhone + "$",
-          $options: "i"
-        } }
-      ] }
-    ] };
+      {
+        $or: [
+          { _id: searchTerm },
+          {
+            userEmails: {
+              $regex: searchTerm,
+              $options: "i"
+            }
+          },
+          {
+            shippingName: {
+              $regex: searchTerm,
+              $options: "i"
+            }
+          },
+          {
+            billingName: {
+              $regex: searchTerm,
+              $options: "i"
+            }
+          },
+          {
+            billingPhone: {
+              $regex: "^" + searchPhone + "$",
+              $options: "i"
+            }
+          },
+          {
+            shippingPhone: {
+              $regex: "^" + searchPhone + "$",
+              $options: "i"
+            }
+          }
+        ]
+      }
+    ]
+  };
   if (Reaction.hasPermission("orders", userId)) {
     orderResults = OrderSearch.find(findTerm, { limit: maxResults });
     Logger.debug(`Found ${orderResults.count()} orders searching for ${searchTerm}`);
@@ -89,25 +105,36 @@ getResults.accounts = function (searchTerm, facets, maxResults, userId) {
     const findTerm = {
       $and: [
         { shopId: shopId },
-        { $or: [
-          { emails: {
-            $regex: searchTerm,
-            $options: "i"
-          } },
-          { "profile.firstName": {
-            $regex: "^" + searchTerm + "$",
-            $options: "i"
-          } },
-          { "profile.lastName": {
-            $regex: "^" + searchTerm + "$",
-            $options: "i"
-          } },
-          { "profile.phone": {
-            $regex: "^" + searchPhone + "$",
-            $options: "i"
-          } }
-        ] }
-      ] };
+        {
+          $or: [
+            {
+              emails: {
+                $regex: searchTerm,
+                $options: "i"
+              }
+            },
+            {
+              "profile.firstName": {
+                $regex: "^" + searchTerm + "$",
+                $options: "i"
+              }
+            },
+            {
+              "profile.lastName": {
+                $regex: "^" + searchTerm + "$",
+                $options: "i"
+              }
+            },
+            {
+              "profile.phone": {
+                $regex: "^" + searchPhone + "$",
+                $options: "i"
+              }
+            }
+          ]
+        }
+      ]
+    };
     accountResults = AccountSearch.find(findTerm, {
       limit: maxResults
     });
