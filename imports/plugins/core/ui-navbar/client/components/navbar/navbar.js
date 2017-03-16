@@ -73,6 +73,13 @@ Template.CoreNavigationBar.helpers({
       component: NotificationContainer
     };
   },
+  staticPagesMenu() {
+    return {
+      component: FlatButton,
+      kind: "flat",
+      label: "More Pages"
+    };
+  },
   onMenuButtonClick() {
     const instance = Template.instance();
     return () => {
