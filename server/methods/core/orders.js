@@ -9,7 +9,7 @@ import { getSlug } from "/lib/api";
 import { Cart, Media, Orders, Products, Shops, Accounts } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
-// import Nexmo from "nexmo";
+import Nexmo from "nexmo";
 
 
 // helper to return the order credit object
@@ -39,8 +39,7 @@ export const methods = {
     const cancelOrder = Orders.update({
       "_id": order._id,
       "shipping.0": { $exists: true }
-    },
-      {
+    }, {
         $set: {
           "workflow.status": "coreOrderWorkflow/canceled",
           "shipping.$.packed": false
@@ -384,24 +383,55 @@ export const methods = {
   "orders/sendNotification": function (order, action) {
     check(order, Object);
 
-    const shoppersPhone = order.billing[0].address.phone;
-    Logger.info(shoppersPhone);
-    // Loop through orders to get vendor information to send an in app notification to vendor
     const orderedItems = order.items;
+    const shoppersPhone = order.billing[0].address.phone;
     let orderedProducts = "";
 
-    for (let i = 0; i < orderedItems.length; i += 1) {
-      orderedProducts += `${orderedItems[i].title}`;
-      const productVendor = Accounts.find({
-        _id: orderedItems[i].reactionVendorId
-      }).fetch();
-      const type = "forAdmin";
-      const prefix = Reaction.getShopPrefix();
-      const url = `${prefix}/dashboard/orders`;
-      const sms = true;
-      // Sending notification to vendor
-      Logger.info("sending notification to vendor");
-      return Meteor.call("notification/send", productVendor[0]._id, type, url, sms);
+    if (order.workflow.status === "new") {
+      // Send notificaton to vendors
+      const vendorIdList = [];
+      for (let i = 0; i < orderedItems.length; i += 1) {
+        orderedProducts += `${orderedItems[i].title}`;
+        const vendorFound = vendorIdList.includes(orderedItems[i].reactionVendorId);
+        if (!vendorFound) {
+          vendorIdList.push(orderedItems[i].reactionVendorId);
+          const productVendor = Accounts.find({
+            _id: orderedItems[i].reactionVendorId
+          }).fetch();
+          const type = "forAdmin";
+          const prefix = Reaction.getShopPrefix();
+          const url = `${prefix}/notifications`;
+          const sms = true;
+          // Sending in-app notification to vendor
+          Logger.info("sending notification to vendor");
+          Meteor.call("notification/send", productVendor[0]._id, type, url, sms);
+          // Sending sms notification to vendor
+          const vendorSmsContent = {
+            to: productVendor[0].profile.vendorDetails[0].shopPhone,
+            message: "You have a pending order in your store."
+          };
+          Meteor.call("send/smsAlert", vendorSmsContent, (error, result) => {
+            if (error) {
+              Logger.warn("ERROR", error);
+            } else {
+              Logger.info("SMS SENT");
+            }
+          });
+        }
+      }
+    } else if (order.workflow.status === "coreOrderWorkflow/processing") {
+      // Sending sms notification to customer when order has been shipped/completed
+      const customerSmsContent = {
+        to: shoppersPhone,
+        message: `Your order for ${orderedProducts} has been shipped. Thanks.`
+      };
+      Meteor.call("send/smsAlert", customerSmsContent, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
     }
     check(action, Match.OneOf(String, undefined));
 
@@ -473,12 +503,6 @@ export const methods = {
       _.each(refundResult, function (item) {
         refundTotal += parseFloat(item.amount);
       });
-
-
-
-
-
-
 
       // Merge data into single object to pass to email template
       const dataForEmail = {
@@ -591,21 +615,33 @@ export const methods = {
     return false;
   },
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  /**
+   * send/smsAlert
+   *
+   * @summary send order notification sms
+   * @param {Object} smsContent - send notification action
+   * @return {Boolean} sms notification
+   */
+  "send/smsAlert": function (smsContent) {
+    check(smsContent, Object);
+    const apiKey = Meteor.settings.SMS.APIKEY;
+    const apiSecret = Meteor.settings.SMS.APISECRET;
+    const sender = Meteor.settings.SMS.SENDER;
+    const recipient = smsContent.to;
+    const message = smsContent.message;
+    const nexmo = new Nexmo({
+      apiKey,
+      apiSecret
+    });
+    nexmo.message.sendSms(sender, recipient, message, {}, (err, res) => {
+      if (err) {
+        return Logger.error(err);
+      }
+      Logger.info(res);
+      Logger.info(sender);
+      Logger.info(recipient);
+    });
+  },
 
   /**
    * orders/orderCompleted
