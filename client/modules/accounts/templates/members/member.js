@@ -67,7 +67,7 @@ Template.member.helpers({
     }
     return false;
   },
-  isInactiveVendor: function() {
+  isInactiveVendor: function () {
     let userDetails = Accounts.findOne(this.userId);
     if (userDetails.profile.vendorDetails) {
       userDetails = userDetails.profile.vendorDetails[0].shopActive;

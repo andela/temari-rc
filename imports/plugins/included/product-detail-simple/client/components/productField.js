@@ -110,6 +110,7 @@ class ProductField extends Component {
     if (this.showEditControls) {
       return this.renderTextField();
     }
+// console.log(this.value, 'value');
 
     if (this.props.element) {
       return React.createElement(this.props.element, {
@@ -130,7 +131,7 @@ class ProductField extends Component {
 ProductField.propTypes = {
   editContainerProps: PropTypes.object,
   editable: PropTypes.bool,
-  element: PropTypes.node,
+  element: PropTypes.string,
   fieldName: PropTypes.string,
   fieldTitle: PropTypes.string,
   itemProp: PropTypes.string,
