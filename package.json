@@ -6,6 +6,9 @@
   "directories": {
     "test": "tests"
   },
+   "engines": {
+    "node": "4.7.x"
+  },
   "homepage": "https://github.com/reactioncommerce/reaction",
   "url": "https://github.com/reactioncommerce/reaction",
   "email": "reaction@reactioncommerce.com",
@@ -118,6 +121,7 @@
       }
     }
   },
+
   "scripts": {
     "create-report": "allure generate allure-results/ -o ~/allure-report",
     "open-report": "cd && allure report open",
