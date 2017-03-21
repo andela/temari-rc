@@ -20,9 +20,7 @@ const permissions = [
   "reaction-shipping",
   "shipping",
   "reaction-orders",
-  "vendor",
-  "reaction-static-pages",
-  "staticPages"
+  "vendor"
 ];
 
 /**
