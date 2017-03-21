@@ -40,25 +40,13 @@ export const methods = {
       "_id": order._id,
       "shipping.0": { $exists: true }
     }, {
-        $set: {
-          "workflow.status": "coreOrderWorkflow/canceled",
-          "shipping.$.packed": false
-        }
-      });
-    const productId = order.items[0].productId;
-    const itemQty = order.items[0].quantity;
+      $set: {
+        "workflow.status": "coreOrderWorkflow/canceled",
+        "shipping.$.packed": false
+      }
+    });
 
-    check(cancelOrder, Number);
-    check(productId, String);
-    check(itemQty, Number);
-    if (cancelOrder === 0) {
-      return 0;
-    }
-    const product = Products.find({ _id: order.items[0].productId }).fetch();
-    if (product[0].inventoryQuantity) {
-      product[0].inventoryQuantity += itemQty;
-    }
-    return product[0];
+    return cancelOrder;
   },
 
   /**
@@ -890,8 +878,9 @@ export const methods = {
    * @param {String} orderId - add tracking to orderId
    * @return {null} no return value
    */
-  "orders/inventoryAdjust": function (orderId) {
+  "orders/inventoryAdjust": function (orderId, type) {
     check(orderId, String);
+    check(type, String);
 
     if (!Reaction.hasPermission("orders")) {
       throw new Meteor.Error(403, "Access Denied");
@@ -899,17 +888,20 @@ export const methods = {
 
     const order = Orders.findOne(orderId);
     order.items.forEach(item => {
-      Products.update({
+      const quantity = (type === "new")
+        ? -item.quantity
+        : item.quantity;
+      const orderUpdate = Products.update({
         _id: item.variants._id
       }, {
-          $inc: {
-            inventoryQuantity: -item.quantity
-          }
-        }, {
-          selector: {
-            type: "variant"
-          }
-        });
+        $inc: {
+          inventoryQuantity: quantity
+        }
+      }, {
+        selector: {
+          type: "variant"
+        }
+      });
     });
   },
 
