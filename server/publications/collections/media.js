@@ -1,4 +1,5 @@
-import { Media, Revisions } from "/lib/collections";
+/* eslint no-undef: 0*/
+import { Media, Revisions, Audio, Software, Video, Book } from "/lib/collections";
 import { Reaction } from "/server/api";
 import { RevisionApi } from "/imports/plugins/core/revisions/lib/api/revisions";
 
@@ -76,3 +77,27 @@ Meteor.publish("Media", function (shops) {
     }
   });
 });
+
+const publisher = (db, name) => {
+  Meteor.publish(name, function (productId) {
+    check(productId, String);
+    let selector;
+    const shopId = Reaction.getShopId();
+    if (!shopId) {
+      return this.ready();
+    }
+    if (shopId) {
+      selector = {
+        "metadata.shopId": shopId,
+        "metadata.productId": productId
+      };
+    }
+
+    return db.find(selector);
+  });
+};
+
+publisher(Audio, "audio");
+publisher(Video, "video");
+publisher(Book, "book");
+publisher(Software, "software");

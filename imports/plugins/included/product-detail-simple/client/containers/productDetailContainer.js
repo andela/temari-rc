@@ -16,14 +16,23 @@ class ProductDetailContainer extends Component {
     super(props);
 
     this.state = {
-      cartQuantity: 1
+      cartQuantity: 1,
+      vendorName: "",
+      isDigital: false
     };
+    this.listenToIsDigital = this.listenToIsDigital.bind(this);
+  }
+
+  get isDigital() {
+    console.log(this.state.isDigital, 'PDC');
+    return this.state.isDigital;
   }
 
   handleCartQuantityChange = (event, quantity) => {
     this.setState({
       cartQuantity: Math.max(quantity, 1)
     });
+    this.listenToIsDigital = this.listenToIsDigital.bind(this);
   }
 
   handleAddToCart = () => {
@@ -69,9 +78,11 @@ class ProductDetailContainer extends Component {
         });
       } else {
         productId = currentProduct._id;
+        const isDigital = currentProduct.isDigital;
+
 
         if (productId) {
-          Meteor.call("cart/addToCart", productId, currentVariant._id, quantity, (error) => {
+          Meteor.call("cart/addToCart", productId, currentVariant._id, quantity, isDigital, (error) => {
             if (error) {
               Logger.error("Failed to add to cart.", error);
               return error;
@@ -144,6 +155,9 @@ class ProductDetailContainer extends Component {
   handleDeleteProduct = () => {
     ReactionProduct.maybeDeleteProduct(this.props.product);
   }
+  listenToIsDigital(isDigital) {
+    this.setState({ isDigital: isDigital });
+  }
 
   render() {
     return (
@@ -154,10 +168,12 @@ class ProductDetailContainer extends Component {
               cartQuantity={this.state.cartQuantity}
               mediaGalleryComponent={<MediaGalleryContainer media={this.props.media} />}
               onAddToCart={this.handleAddToCart}
+              changeParentIsDigitalState={this.listenToIsDigital}
               onCartQuantityChange={this.handleCartQuantityChange}
               onViewContextChange={this.handleViewContextChange}
               socialComponent={<SocialContainer />}
-              topVariantComponent={<VariantListContainer />}
+              isDigital={this.isDigital}
+              topVariantComponent={<VariantListContainer product={this.props.product} isDigital={this.state.isDigital} />}
               onDeleteProduct={this.handleDeleteProduct}
               onProductFieldChange={this.handleProductFieldChange}
               {...this.props}

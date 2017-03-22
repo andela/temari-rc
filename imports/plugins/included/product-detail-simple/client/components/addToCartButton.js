@@ -4,6 +4,7 @@ import { Alert, Translation } from "/imports/plugins/core/ui/client/components";
 
 class AddToCartButton extends Component {
   get hasVariants() {
+    console.log(this.props.variants, 'variants');
     return Array.isArray(this.props.variants) && this.props.variants.length > 0;
   }
   hanleCartQuantityChange = (event) => {
@@ -22,7 +23,7 @@ class AddToCartButton extends Component {
             min="1"
             name="addToCartQty"
             onChange={this.hanleCartQuantityChange}
-            type="number"
+            type={this.props.inputType}
             value={this.props.cartQuantity}
           />
           <button
@@ -49,6 +50,7 @@ class AddToCartButton extends Component {
 
 AddToCartButton.propTypes = {
   cartQuantity: PropTypes.number,
+  inputType: PropTypes.string,
   editable: PropTypes.bool,
   onAddToCart: PropTypes.func,
   onCartQuantityChange: PropTypes.func,
