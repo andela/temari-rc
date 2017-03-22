@@ -292,8 +292,9 @@ Meteor.methods({
     check(productId, String);
     check(variantId, String);
     check(itemQty, Match.Optional(Number));
-    check(isDigital, Boolean);
-
+    if (isDigital) {
+      check(isDigital, Boolean);
+    }
     const cart = Collections.Cart.findOne({ userId: this.userId });
     if (!cart) {
       Logger.error(`Cart not found for user: ${ this.userId }`);
@@ -506,6 +507,13 @@ Meteor.methods({
   "cart/copyCartToOrder": function(cartId) {
     check(cartId, String);
     const cart = Collections.Cart.findOne(cartId);
+    console.log('here---------', Object.keys(cart));
+
+    if (!cart.items || cart.items.length === 0) {
+      const msg = "An error occurred saving the order. Missing cart items.";
+      Logger.error(msg);
+      throw new Meteor.Error("no-cart-items", msg);
+    }
     const productId = cart.items[0].productId;
     const product = Collections.Products.findOne(productId);
     // security check
@@ -607,7 +615,7 @@ Meteor.methods({
 
    let orderId = {};
 
-    if (product.isDigital) {
+    if (product && product.isDigital) {
       order.workflow.status = "coreOrderWorkflow/completed";
       order.workflow.workflow = ["coreOrderWorkflow/created", "coreOrderWorkflow/processing", "coreOrderWorkflow/completed"];
       order.items[0].workflow.workflow = ["coreOrderItemWorkflow/packed", "coreOrderItemWorkflow/completed"];
