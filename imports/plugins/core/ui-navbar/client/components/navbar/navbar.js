@@ -93,6 +93,7 @@ Template.CoreNavigationBar.helpers({
       label: "More Pages"
     };
   },
+
   TourButtonComponent() {
     return {
       component: FlatButton,
@@ -103,6 +104,7 @@ Template.CoreNavigationBar.helpers({
       }
     };
   },
+
   onMenuButtonClick() {
     const instance = Template.instance();
     return () => {

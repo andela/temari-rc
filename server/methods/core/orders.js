@@ -6,20 +6,21 @@ import Future from "fibers/future";
 import { Meteor } from "meteor/meteor";
 import { check } from "meteor/check";
 import { getSlug } from "/lib/api";
-import { Cart, Media, Orders, Products, Shops } from "/lib/collections";
+import { Cart, Media, Orders, Products, Shops, Accounts } from "/lib/collections";
 import * as Schemas from "/lib/collections/schemas";
 import { Logger, Reaction } from "/server/api";
+import Nexmo from "nexmo";
 
 
 // helper to return the order credit object
 // the first credit paymentMethod on the order
 // returns entire payment method
 export function orderCreditMethod(order) {
-  return order.billing.filter(value => value.paymentMethod.method ===  "credit")[0];
+  return order.billing.filter(value => value.paymentMethod.method === "credit")[0];
 }
 // helper to return the order debit object
 export function orderDebitMethod(order) {
-  return order.billing.filter(value => value.paymentMethod.method ===  "debit")[0];
+  return order.billing.filter(value => value.paymentMethod.method === "debit")[0];
 }
 
 /**
@@ -44,29 +45,17 @@ export const methods = {
         "shipping.$.packed": false
       }
     });
-    const productId = order.items[0].productId;
-    const itemQty = order.items[0].quantity;
 
-    check(cancelOrder, Number);
-    check(productId, String);
-    check(itemQty, Number);
-    if (cancelOrder === 0) {
-      return 0;
-    }
-    const product = Products.find({ _id: order.items[0].productId }).fetch();
-    if (product[0].inventoryQuantity) {
-      product[0].inventoryQuantity += itemQty;
-    }
-    return product[0];
+    return cancelOrder;
   },
 
-/**
+  /**
    * orders/updateProduct
    * @summary update products
    * @param {Object} product - product Object
    * @returns {String} returns workflow update result
    */
-  
+
   // @TODO: Method should be used to update products
 
   "orders/updateProduct": function (product) {
@@ -75,14 +64,14 @@ export const methods = {
       _id: product._id,
       inventoryQuantity: { $exists: true }
     }, {
-      $set: {
-        inventoryQuantity: product.inventoryQuantity
-      }
-    }, {
-      selector: {
-        type: "variant"
-      }
-    });
+        $set: {
+          inventoryQuantity: product.inventoryQuantity
+        }
+      }, {
+        selector: {
+          type: "variant"
+        }
+      });
   },
 
   /**
@@ -148,10 +137,10 @@ export const methods = {
         "_id": order._id,
         "shipping._id": shipment._id
       }, {
-        $set: {
-          "shipping.$.packed": packed
-        }
-      });
+          $set: {
+            "shipping.$.packed": packed
+          }
+        });
 
       // Set the status of the items as shipped
       const itemIds = shipment.items.map((item) => {
@@ -164,10 +153,10 @@ export const methods = {
           "_id": order._id,
           "shipping._id": shipment._id
         }, {
-          $set: {
-            "shipping.$.packed": packed
-          }
-        });
+            $set: {
+              "shipping.$.packed": packed
+            }
+          });
       }
       return result;
     }
@@ -193,10 +182,10 @@ export const methods = {
       "_id": order._id,
       "billing.paymentMethod.method": "credit"
     }, {
-      $set: {
-        "billing.$.paymentMethod.status": "adjustments"
-      }
-    });
+        $set: {
+          "billing.$.paymentMethod.status": "adjustments"
+        }
+      });
   },
 
   /**
@@ -228,14 +217,14 @@ export const methods = {
       "_id": order._id,
       "billing.paymentMethod.method": "credit"
     }, {
-      $set: {
-        "billing.$.paymentMethod.amount": total,
-        "billing.$.paymentMethod.status": "approved",
-        "billing.$.paymentMethod.mode": "capture",
-        "billing.$.invoice.discounts": discount,
-        "billing.$.invoice.total": total
-      }
-    });
+        $set: {
+          "billing.$.paymentMethod.amount": total,
+          "billing.$.paymentMethod.status": "approved",
+          "billing.$.paymentMethod.mode": "capture",
+          "billing.$.invoice.discounts": discount,
+          "billing.$.invoice.total": total
+        }
+      });
   },
 
   /**
@@ -381,6 +370,57 @@ export const methods = {
    */
   "orders/sendNotification": function (order, action) {
     check(order, Object);
+
+    const orderedItems = order.items;
+    const shoppersPhone = order.billing[0].address.phone;
+    let orderedProducts = "";
+
+    if (order.workflow.status === "new") {
+      // Send notificaton to vendors
+      const vendorIdList = [];
+      for (let i = 0; i < orderedItems.length; i += 1) {
+        orderedProducts += `${orderedItems[i].title}`;
+        const vendorFound = vendorIdList.includes(orderedItems[i].reactionVendorId);
+        if (!vendorFound) {
+          vendorIdList.push(orderedItems[i].reactionVendorId);
+          const productVendor = Accounts.find({
+            _id: orderedItems[i].reactionVendorId
+          }).fetch();
+          const type = "forAdmin";
+          const prefix = Reaction.getShopPrefix();
+          const url = `${prefix}/notifications`;
+          const sms = true;
+          // Sending in-app notification to vendor
+          Logger.info("sending notification to vendor");
+          Meteor.call("notification/send", productVendor[0]._id, type, url, sms);
+          // Sending sms notification to vendor
+          const vendorSmsContent = {
+            to: productVendor[0].profile.vendorDetails[0].shopPhone,
+            message: "You have a pending order in your store."
+          };
+          Meteor.call("send/smsAlert", vendorSmsContent, (error, result) => {
+            if (error) {
+              Logger.warn("ERROR", error);
+            } else {
+              Logger.info("SMS SENT");
+            }
+          });
+        }
+      }
+    } else if (order.workflow.status === "coreOrderWorkflow/processing") {
+      // Sending sms notification to customer when order has been shipped/completed
+      const customerSmsContent = {
+        to: shoppersPhone,
+        message: `Your order for ${orderedProducts} has been shipped. Thanks.`
+      };
+      Meteor.call("send/smsAlert", customerSmsContent, (error, result) => {
+        if (error) {
+          Logger.warn("ERROR", error);
+        } else {
+          Logger.info("SMS SENT");
+        }
+      });
+    }
     check(action, Match.OneOf(String, undefined));
 
     if (!this.userId) {
@@ -564,6 +604,34 @@ export const methods = {
   },
 
   /**
+   * send/smsAlert
+   *
+   * @summary send order notification sms
+   * @param {Object} smsContent - send notification action
+   * @return {Boolean} sms notification
+   */
+  "send/smsAlert": function (smsContent) {
+    check(smsContent, Object);
+    const apiKey = Meteor.settings.SMS.APIKEY;
+    const apiSecret = Meteor.settings.SMS.APISECRET;
+    const sender = Meteor.settings.SMS.SENDER;
+    const recipient = smsContent.to;
+    const message = smsContent.message;
+    const nexmo = new Nexmo({
+      apiKey,
+      apiSecret
+    });
+    nexmo.message.sendSms(sender, recipient, message, {}, (err, res) => {
+      if (err) {
+        return Logger.error(err);
+      }
+      Logger.info(res);
+      Logger.info(sender);
+      Logger.info(recipient);
+    });
+  },
+
+  /**
    * orders/orderCompleted
    *
    * @summary trigger orderCompleted status and workflow update
@@ -611,10 +679,10 @@ export const methods = {
       "_id": orderId,
       "shipping._id": shippingId
     }, {
-      $addToSet: {
-        "shipping.shipments": data
-      }
-    });
+        $addToSet: {
+          "shipping.shipments": data
+        }
+      });
   },
 
   /**
@@ -639,10 +707,10 @@ export const methods = {
       "_id": order._id,
       "shipping._id": shipment._id
     }, {
-      $set: {
-        ["shipping.$.tracking"]: tracking
-      }
-    });
+        $set: {
+          ["shipping.$.tracking"]: tracking
+        }
+      });
   },
 
   /**
@@ -667,10 +735,10 @@ export const methods = {
       "_id": orderId,
       "shipping._id": shipmentId
     }, {
-      $push: {
-        "shipping.$.items": item
-      }
-    });
+        $push: {
+          "shipping.$.items": item
+        }
+      });
   },
 
   "orders/updateShipmentItem": function (orderId, shipmentId, item) {
@@ -686,10 +754,10 @@ export const methods = {
       "_id": orderId,
       "shipments._id": shipmentId
     }, {
-      $addToSet: {
-        "shipment.$.items": shipmentIndex
-      }
-    });
+        $addToSet: {
+          "shipment.$.items": shipmentIndex
+        }
+      });
   },
 
   /**
@@ -743,10 +811,10 @@ export const methods = {
     return Orders.update({
       cartId: cartId
     }, {
-      $set: {
-        email: email
-      }
-    });
+        $set: {
+          email: email
+        }
+      });
   },
   /**
    * orders/updateDocuments
@@ -810,8 +878,9 @@ export const methods = {
    * @param {String} orderId - add tracking to orderId
    * @return {null} no return value
    */
-  "orders/inventoryAdjust": function (orderId) {
+  "orders/inventoryAdjust": function (orderId, type) {
     check(orderId, String);
+    check(type, String);
 
     if (!Reaction.hasPermission("orders")) {
       throw new Meteor.Error(403, "Access Denied");
@@ -819,11 +888,14 @@ export const methods = {
 
     const order = Orders.findOne(orderId);
     order.items.forEach(item => {
-      Products.update({
+      const quantity = (type === "new")
+        ? -item.quantity
+        : item.quantity;
+      const orderUpdate = Products.update({
         _id: item.variants._id
       }, {
         $inc: {
-          inventoryQuantity: -item.quantity
+          inventoryQuantity: quantity
         }
       }, {
         selector: {
@@ -873,15 +945,15 @@ export const methods = {
               "_id": orderId,
               "billing.paymentMethod.transactionId": transactionId
             }, {
-              $set: {
-                "billing.$.paymentMethod.mode": "capture",
-                "billing.$.paymentMethod.status": "completed",
-                "billing.$.paymentMethod.metadata": metadata
-              },
-              $push: {
-                "billing.$.paymentMethod.transactions": result
-              }
-            });
+                $set: {
+                  "billing.$.paymentMethod.mode": "capture",
+                  "billing.$.paymentMethod.status": "completed",
+                  "billing.$.paymentMethod.metadata": metadata
+                },
+                $push: {
+                  "billing.$.paymentMethod.transactions": result
+                }
+              });
           } else {
             if (result && result.error) {
               Logger.fatal("Failed to capture transaction.", order, paymentMethod.transactionId, result.error);
@@ -893,14 +965,14 @@ export const methods = {
               "_id": orderId,
               "billing.paymentMethod.transactionId": transactionId
             }, {
-              $set: {
-                "billing.$.paymentMethod.mode": "capture",
-                "billing.$.paymentMethod.status": "error"
-              },
-              $push: {
-                "billing.$.paymentMethod.transactions": result
-              }
-            });
+                $set: {
+                  "billing.$.paymentMethod.mode": "capture",
+                  "billing.$.paymentMethod.status": "error"
+                },
+                $push: {
+                  "billing.$.paymentMethod.transactions": result
+                }
+              });
 
             return { error: "orders/capturePayments: Failed to capture transaction" };
           }
@@ -968,10 +1040,10 @@ export const methods = {
       "_id": orderId,
       "billing.paymentMethod.transactionId": transactionId
     }, {
-      $push: {
-        "billing.$.paymentMethod.transactions": result
-      }
-    });
+        $push: {
+          "billing.$.paymentMethod.transactions": result
+        }
+      });
 
     if (result.saved === false) {
       Logger.fatal("Attempt for refund transaction failed", order._id, paymentMethod.transactionId, result.error);

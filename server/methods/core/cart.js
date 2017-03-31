@@ -288,11 +288,13 @@ Meteor.methods({
    *  @param {Number} [itemQty] - qty to add to cart
    *  @return {Number|Object} Mongo insert response
    */
-  "cart/addToCart": function(productId, variantId, itemQty) {
+  "cart/addToCart": function (productId, variantId, itemQty, isDigital) {
     check(productId, String);
     check(variantId, String);
     check(itemQty, Match.Optional(Number));
-
+    if (isDigital) {
+      check(isDigital, Boolean);
+    }
     const cart = Collections.Cart.findOne({ userId: this.userId });
     if (!cart) {
       Logger.error(`Cart not found for user: ${ this.userId }`);
@@ -344,6 +346,9 @@ Meteor.methods({
         "_id": cart._id,
         "items.variants._id": variantId
       }, {
+        $addToSet: {
+          isDigital: isDigital
+        },
         $inc: {
           "items.$.quantity": quantity
         }
@@ -373,6 +378,7 @@ Meteor.methods({
       _id: cart._id
     }, {
       $addToSet: {
+        isDigital: isDigital,
         items: {
           _id: Random.id(),
           shopId: product.shopId,
@@ -494,12 +500,22 @@ Meteor.methods({
    * don't want to just make another cart item
    * @todo:  Partial order processing, shopId processing
    * @todo:  Review Security on this method
+   * @param {Boolean} isDigital- isDigital or checking for digital product
    * @param {String} cartId - cartId to transform to order
    * @return {String} returns orderId
    */
   "cart/copyCartToOrder": function(cartId) {
     check(cartId, String);
     const cart = Collections.Cart.findOne(cartId);
+    console.log('here---------', Object.keys(cart));
+
+    if (!cart.items || cart.items.length === 0) {
+      const msg = "An error occurred saving the order. Missing cart items.";
+      Logger.error(msg);
+      throw new Meteor.Error("no-cart-items", msg);
+    }
+    const productId = cart.items[0].productId;
+    const product = Collections.Products.findOne(productId);
     // security check
     if (cart.userId !== this.userId) {
       throw new Meteor.Error(403, "Access Denied");
@@ -597,17 +613,25 @@ Meteor.methods({
       throw new Meteor.Error("no-cart-items", msg);
     }
 
-    // set new workflow status
-    order.workflow.status = "new";
-    order.workflow.workflow = ["coreOrderWorkflow/created"];
+   let orderId = {};
 
-    // insert new reaction order
-    const orderId = Collections.Orders.insert(order);
+    if (product && product.isDigital) {
+      order.workflow.status = "coreOrderWorkflow/completed";
+      order.workflow.workflow = ["coreOrderWorkflow/created", "coreOrderWorkflow/processing", "coreOrderWorkflow/completed"];
+      order.items[0].workflow.workflow = ["coreOrderItemWorkflow/packed", "coreOrderItemWorkflow/completed"];
+      // insert new reaction order
+      orderId = Collections.Orders.insert(order);
+    } else {
+      order.workflow.status = "new";
+      order.workflow.workflow = ["coreOrderWorkflow/created"];
+
+      // insert new reaction order
+      orderId = Collections.Orders.insert(order);
+    }
     Logger.info("Created orderId", orderId);
 
     if (orderId) {
-      // TODO: check for successful orders/inventoryAdjust
-      // Meteor.call("orders/inventoryAdjust", orderId);
+      Meteor.call("orders/inventoryAdjust", orderId, "new");
       Collections.Cart.remove({
         _id: order.cartId
       });

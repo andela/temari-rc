@@ -6,6 +6,9 @@
   "directories": {
     "test": "tests"
   },
+  "engines": {
+    "node": "4.7.x"
+  },
   "homepage": "https://github.com/reactioncommerce/reaction",
   "url": "https://github.com/reactioncommerce/reaction",
   "email": "reaction@reactioncommerce.com",
@@ -56,7 +59,7 @@
     "meteor-node-stubs": "^0.2.3",
     "moment": "^2.17.0",
     "moment-timezone": "^0.5.9",
-    "nexmo": "^1.1.0",
+    "nexmo": "^1.2.0",
     "node-geocoder": "^3.15.0",
     "nodemailer": "^2.6.4",
     "nodemailer-wellknown": "^0.2.0",

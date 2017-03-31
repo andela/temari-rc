@@ -19,7 +19,9 @@
     {{#if hasPermission 'account/profile'}}
       <div>{{> React notificationButtonComponent }}</div>
     {{/if}}
+
     <div class="tour">{{> React TourButtonComponent}}</div>
+
     <div  class="accounts">{{> accounts tpl="staticPagesNav"}}</div>
     <div class="languages hidden-xs">{{> i18nChooser}}</div>
     <div id="accounts" class="accounts">{{> accounts tpl="loginDropdown"}}</div>
