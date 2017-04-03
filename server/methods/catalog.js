@@ -1296,7 +1296,7 @@ Meteor.methods({
       view += 1;
       const productUpdate = Object.assign({}, product, {views: view});
       result = Products.upsert(product._id, {$set: productUpdate}, {validate: false});
-    }
+    },
 
   /**
    * products/updateFileId
