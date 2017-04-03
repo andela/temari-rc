@@ -105,7 +105,10 @@ Template.vendorForm.events({
         shopAddress: shopAddress
       }]
     };
-    Meteor.call("vendor/updateDetails", vendorDetails, function(err) {
+    Meteor.call("vendor/updateDetails", vendorDetails, function (err) {
+      if (err) {
+        Alerts.toast(err, "error");
+      }
       Alerts.toast("Vendor Updated", "success");
     });
   }
@@ -152,6 +155,7 @@ Template.upgradeToVendor.events({
       if (err) {
         Alerts.toast(err, "error");
       } else {
+        $("#.upgrade-container").css("display", "none");
         Alerts.toast("Upgrade Successful, You will be activated by the Admin", "success");
       }
     });
