@@ -507,7 +507,6 @@ Meteor.methods({
   "cart/copyCartToOrder": function(cartId) {
     check(cartId, String);
     const cart = Collections.Cart.findOne(cartId);
-    console.log('here---------', Object.keys(cart));
 
     if (!cart.items || cart.items.length === 0) {
       const msg = "An error occurred saving the order. Missing cart items.";
