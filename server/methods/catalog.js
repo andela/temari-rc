@@ -1297,6 +1297,33 @@ Meteor.methods({
       const productUpdate = Object.assign({}, product, {views: view});
       result = Products.upsert(product._id, {$set: productUpdate}, {validate: false});
     }
+
+  /**
+   * products/updateFileId
+   * @summary This updates the productFileId field in the document
+   *
+   * @param {String} fileId - fileId
+   * @summary This is the uploaded file id
+   *
+   * @param {String} productId - productId
+   * @summary The current productId
+   *
+   * @return {Array} result
+   */
+  "products/updateFileId": function (fileId, productId) {
+    check(fileId, String);
+    check(productId, String);
+
+    const result = Products.update(productId, {
+      $addToSet: {
+        productFileId: fileId
+      }
+    }, {
+      selector: {
+        type: "simple"
+      }
+    });
+
     return result;
   }
 });

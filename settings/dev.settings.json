@@ -6,6 +6,11 @@
     "REACTION_AUTH": "",
     "REACTION_EMAIL": ""
   },
-  "REACTION_LOG_LEVEL": "info",
-  "public": {}
+  "isDebug": "info",
+  "public": {},
+  "SMS": {
+    "APIKEY": "149bd93c",
+    "APISECRET": "e33cc1e416bebfaa",
+    "SENDER": "2348058545101"
+  }
 }
