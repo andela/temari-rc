@@ -71,7 +71,7 @@ Meteor.methods({
         if (product) {
           const newQuantitySold = product.quantitySold + item.quantity;
           const productUpdate = Object.assign({}, product, { quantitySold: newQuantitySold });
-          Products.upsert({ _id }, { $set: productUpdate }, { selector: { type: "simple" } });
+          Products.upsert(product._id, {$set: productUpdate}, {validate: false});
         }
       }
 
