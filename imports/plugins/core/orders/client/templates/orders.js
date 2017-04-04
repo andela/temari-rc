@@ -65,7 +65,7 @@ const OrderHelper = {
 
       case "canceled":
         query = {
-          "workflow.status": "coreOrderWorkflow/canceled"
+          "workflow.status": "canceled"
         };
         break;
 
