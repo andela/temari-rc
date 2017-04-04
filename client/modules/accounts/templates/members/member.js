@@ -20,9 +20,7 @@ const permissions = [
   "reaction-shipping",
   "shipping",
   "reaction-orders",
-  "vendor",
-  "reaction-static-pages",
-  "staticPages"
+  "vendor"
 ];
 
 /**
@@ -67,7 +65,7 @@ Template.member.helpers({
     }
     return false;
   },
-  isInactiveVendor: function() {
+  isInactiveVendor: function () {
     let userDetails = Accounts.findOne(this.userId);
     if (userDetails.profile.vendorDetails) {
       userDetails = userDetails.profile.vendorDetails[0].shopActive;

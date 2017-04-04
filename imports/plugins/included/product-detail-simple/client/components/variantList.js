@@ -6,6 +6,12 @@ import { ChildVariant } from "./";
 
 class VariantList extends Component {
 
+  constructor(props) {
+    super(props);
+
+    this.showIfNotDigital = this.showIfNotDigital.bind(this);
+  }
+
   handleVariantEditClick = (event, editButtonProps) => {
     if (this.props.onEditVariant) {
       return this.props.onEditVariant(event, editButtonProps.data);
@@ -172,11 +178,24 @@ class VariantList extends Component {
     return null;
   }
 
+  showIfNotDigital() {
+    console.log(this.props.isDigital, "isDigital");
+    if (this.props.isDigital === "" || !this.props.isDigital) {
+      return (
+        <div>
+          {this.renderChildVariants()}
+        </div>
+      );
+    }
+
+    return null;
+  }
+
   render() {
     return (
       <div className="product-variants">
         {this.renderVariants()}
-        {this.renderChildVariants()}
+        {this.showIfNotDigital()}
       </div>
     );
   }
@@ -187,12 +206,14 @@ VariantList.propTypes = {
   childVariants: PropTypes.arrayOf(PropTypes.object),
   displayPrice: PropTypes.func,
   editable: PropTypes.bool,
+  isDigital: PropTypes.any,
   isSoldOut: PropTypes.func,
   onCreateVariant: PropTypes.func,
   onEditVariant: PropTypes.func,
   onMoveVariant: PropTypes.func,
   onVariantClick: PropTypes.func,
   onVariantVisibiltyToggle: PropTypes.func,
+  products: PropTypes.object,
   variantIsSelected: PropTypes.func,
   variants: PropTypes.arrayOf(PropTypes.object)
 };

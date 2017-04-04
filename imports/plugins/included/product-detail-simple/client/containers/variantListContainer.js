@@ -73,6 +73,14 @@ function isSoldOut(variant) {
 }
 
 class VariantListContainer extends Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isDigital: true
+    };
+  }
   componentWillReceiveProps() {
     this.setState({});
   }
@@ -85,6 +93,14 @@ class VariantListContainer extends Component {
     const selectedProduct =  ReactionProduct.selectedProduct();
 
     Meteor.call("products/createVariant", selectedProduct._id);
+  }
+
+  get products() {
+    return this.props.product;
+  }
+
+  get isDigital() {
+    return this.props.isDigital;
   }
 
   handleVariantClick = (event, variant, ancestors = -1) => {
@@ -168,8 +184,10 @@ class VariantListContainer extends Component {
           onMoveVariant={this.handleMoveVariant}
           onVariantClick={this.handleVariantClick}
           onVariantVisibiltyToggle={this.handleVariantVisibilityToggle}
+          isDigital={this.isDigital}
           onCreateVariant={this.handleCreateVariant}
           {...this.props}
+          products={this.products}
           variants={this.variants}
         />
       </DragDropProvider>
@@ -194,7 +212,7 @@ function composer(props, onData) {
   }
 
   let editable;
-
+  const products = props.product;
   if (Reaction.Router.getQueryParam("as") === "customer") {
     editable = false;
   } else {
@@ -205,6 +223,7 @@ function composer(props, onData) {
     variants: getTopVariants(),
     variantIsSelected,
     variantIsInActionView,
+    products,
     childVariants,
     childVariantMedia,
     displayPrice: ReactionProduct.getVariantPriceRange,
@@ -214,6 +233,8 @@ function composer(props, onData) {
 }
 
 VariantListContainer.propTypes = {
+  isDigital: PropTypes.any,
+  product: PropTypes.object,
   variants: PropTypes.arrayOf(PropTypes.object)
 };
 
