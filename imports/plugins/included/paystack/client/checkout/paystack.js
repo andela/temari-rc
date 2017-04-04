@@ -43,7 +43,7 @@ handlePayment = (transactionId, type) => {
         const paystackMethod = {
           processor: "Paystack",
           storedCard: paystackResponse.authorization.last4,
-          method: "Paystack",
+          method: "credit",
           transactionId: paystackResponse.reference,
           currency: paystackResponse.currency,
           amount: paystackResponse.amount * exchangeRate,
