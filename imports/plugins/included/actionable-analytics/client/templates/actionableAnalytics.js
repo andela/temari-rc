@@ -3,7 +3,10 @@ import { Template } from "meteor/templating";
 import { Orders, ProductSearch } from "/lib/collections";
 import { formatPriceString } from "/client/api";
 import { ReactiveDict } from "meteor/reactive-dict";
+import Chart from "chart.js";
 
+let myChart;
+let otherChart;
 /**
  * Function to fetch the total of all sales made
  * @param {Array} allOrders - Array containing all the orders
@@ -59,7 +62,7 @@ function extractAnalyticsItems(allOrders) {
       ordersCancelled += 1;
     }
   });
-  return {totalSales, totalItemsPurchased, totalShippingCost, analytics, analyticsStatement, ordersAnalytics, ordersCancelled};
+  return { totalSales, totalItemsPurchased, totalShippingCost, analytics, analyticsStatement, ordersAnalytics, ordersCancelled };
 }
 
 /**
@@ -129,13 +132,92 @@ Template.actionableAnalytics.onCreated(function () {
         self.state.set("ordersAnalytics", analyticsItems.ordersAnalytics);
         self.state.set("ordersCancelled", analyticsItems.ordersCancelled);
         self.state.set("salesPerDay",
-        setUpAverageSales(self.state.get("totalSales"),
-          self.state.get("beforeDate"),
-          self.state.get("afterDate")));
+          setUpAverageSales(self.state.get("totalSales"),
+            self.state.get("beforeDate"),
+            self.state.get("afterDate")));
       }
     }
   });
 });
+
+const display = () => {
+  const ctx = document.getElementById("ProductChart");
+  myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Products Sold',
+        data: [],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)'
+        ],
+        borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+};
+const render = () => {
+  const ctx = document.getElementById("EarningChart");
+  otherChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Products Sold',
+        data: [],
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)'
+        ],
+        borderColor: [
+          'rgba(255,99,132,1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
+        }]
+      }
+    }
+  });
+};
 
 Template.actionableAnalytics.onRendered(() => {
   const instance = Template.instance();
@@ -166,8 +248,8 @@ Template.actionableAnalytics.onRendered(() => {
   toDatePicker.setMaxDate(new Date());
   fromDatePicker.setDate(new Date());
   toDatePicker.setDate(fromDatePicker.getDate());
-  // toDatePicker.setDate(new Date(fromDatePicker.getDate().setHours(23)));
-  // instance.state.set("salesPerDay", setUpAverageSales(instance.state.get("totalSales"), fromDatePicker.getDate(), toDatePicker.getDate()));
+  display();
+  render();
 });
 
 Template.actionableAnalytics.helpers({
@@ -196,6 +278,8 @@ Template.actionableAnalytics.helpers({
     const products = [];
     const instance = Template.instance();
     const analytics = instance.state.get("analytics");
+
+
     for (const key in analytics) {
       if (key) {
         products.push({
@@ -204,6 +288,40 @@ Template.actionableAnalytics.helpers({
         });
       }
     }
+    let chartData = [];
+    let chartProduct = [];
+    products.forEach((arrayItem) => {
+      chartProduct.push(arrayItem.product);
+      chartData.push(arrayItem.quantitySold);
+    });
+    if (myChart) {
+      myChart.config.data = {
+        labels: chartProduct,
+        datasets: [{
+          label: 'Products Selling',
+          data: chartData,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)'
+          ],
+          borderColor: [
+            'rgba(255,99,132,1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+          ],
+          borderWidth: 1
+        }]
+      };
+      myChart.update();
+    }
+
     return _.orderBy(
       products,
       (product) => {
@@ -224,6 +342,39 @@ Template.actionableAnalytics.helpers({
           totalSales: formatPriceString(analytics[key].totalSales)
         });
       }
+    }
+    let earnData = [];
+    let earnProduct = [];
+    products.forEach((arrayItem) => {
+      earnProduct.push(arrayItem.product);
+      earnData.push(arrayItem.salesSorter);
+    });
+    if (myChart) {
+      otherChart.config.data = {
+        labels: earnProduct,
+        datasets: [{
+          label: 'Products Selling',
+          data: earnData,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.2)',
+            'rgba(54, 162, 235, 0.2)',
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(153, 102, 255, 0.2)',
+            'rgba(255, 159, 64, 0.2)'
+          ],
+          borderColor: [
+            'rgba(255,99,132,1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)'
+          ],
+          borderWidth: 1
+        }]
+      };
+      otherChart.update();
     }
     return _.orderBy(
       products,

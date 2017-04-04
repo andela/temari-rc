@@ -28,11 +28,11 @@ Template.productDetailSimple.helpers({
     return ProductDetailContainer;
   }
 });
-Template.disqus.helpers({
-  getDisqus() {
-    const script = document.createElement("script");
-    script.src = "//anbu-rc.disqus.com/embed.js";
-    script.setAttribute("data-timestamp", +new Date());
-    (document.head || document.body).appendChild(script);
-  }
-});
+// Template.disqus.helpers({
+//   getDisqus() {
+//     const script = document.createElement("script");
+//     script.src = "//anbu-rc.disqus.com/embed.js";
+//     script.setAttribute("data-timestamp", +new Date());
+//     (document.head || document.body).appendChild(script);
+//   }
+// });
