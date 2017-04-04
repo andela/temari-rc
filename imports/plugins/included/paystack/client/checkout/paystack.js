@@ -22,67 +22,62 @@ const getOrderPrice = () => {
   return parseInt(cart.cartTotal() * exchangeRate, 10);
 };
 
-const getPayStackSettings = () => {
-  return Packages.findOne({
-    name: "paystack-paymentmethod",
-    shopId: Reaction.getShopId()
-  });
-};
-
 const finalizePayment = (payStackMethod) => {
   Meteor.call("cart/submitPayment", payStackMethod);
 };
 
 handlePayment = (transactionId, type) => {
-  const payStackConfig = getPayStackSettings();
-  HTTP.call("GET", `https://api.paystack.co/transaction/verify/${transactionId}`, {
-    headers: {
-      Authorization: `Bearer ${payStackConfig.settings.secretKey}`
-    }
-  }, (error, response) => {
-    if (error) {
-      Alerts.toast("Unable to verify payment", "error");
-    } else if (response.data.data.status !== "success") {
-      Alerts.toast("Payment was not successful", "error");
-    } else {
-      const exchangeRate = getExchangeRate();
-      const paystackResponse = response.data.data;
-      const paystackMethod = {
-        processor: "Paystack",
-        storedCard: paystackResponse.authorization.last4,
-        method: "Paystack",
-        transactionId: paystackResponse.reference,
-        currency: paystackResponse.currency,
-        amount: paystackResponse.amount * exchangeRate,
-        status: paystackResponse.status,
-        mode: "authorize",
-        createdAt: new Date()
-      };
-      if (type === "payment") {
-        paystackMethod.transactions = [];
-        paystackMethod.transactions.push({
-          amount: paystackResponse.amount,
-          transactionId: paystackResponse.reference,
-          currency: paystackResponse.currency
-        });
-        finalizePayment(paystackMethod);
+  Meteor.call("paystackMethod", (err, payStackConfig) => {
+    HTTP.call("GET", `https://api.paystack.co/transaction/verify/${transactionId}`, {
+      headers: {
+        Authorization: `Bearer ${payStackConfig.settings.secretKey}`
       }
-    }
+    }, (error, response) => {
+      if (error) {
+        Alerts.toast("Unable to verify payment", "error");
+      } else if (response.data.data.status !== "success") {
+        Alerts.toast("Payment was not successful", "error");
+      } else {
+        const exchangeRate = getExchangeRate();
+        const paystackResponse = response.data.data;
+        const paystackMethod = {
+          processor: "Paystack",
+          storedCard: paystackResponse.authorization.last4,
+          method: "Paystack",
+          transactionId: paystackResponse.reference,
+          currency: paystackResponse.currency,
+          amount: paystackResponse.amount * exchangeRate,
+          status: paystackResponse.status,
+          mode: "authorize",
+          createdAt: new Date()
+        };
+        if (type === "payment") {
+          paystackMethod.transactions = [];
+          paystackMethod.transactions.push({
+            amount: paystackResponse.amount,
+            transactionId: paystackResponse.reference,
+            currency: paystackResponse.currency
+          });
+          finalizePayment(paystackMethod);
+        }
+      }
+    });
   });
 };
 
 const payWithPaystack = (email, amount, transactionId) => {
-  const payStackConfig = getPayStackSettings();
-  const handler = PaystackPop.setup({
-    key: payStackConfig.settings.publicKey,
-    email: email,
-    amount: amount * 100,
-    ref: transactionId,
-    callback: (response) => {
-      handlePayment(response.reference, "payment");
-    }
+  Meteor.call("paystackMethod", (err, payStackConfig) => {
+    const handler = PaystackPop.setup({
+      key: payStackConfig.settings.publicKey,
+      email: email,
+      amount: amount * 100,
+      ref: transactionId,
+      callback: (response) => {
+        handlePayment(response.reference, "payment");
+      }
+    });
+    handler.openIframe();
   });
-  handler.openIframe();
 };
 
 Template.paystackPaymentForm.events({
