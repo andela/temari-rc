@@ -630,8 +630,7 @@ Meteor.methods({
     Logger.info("Created orderId", orderId);
 
     if (orderId) {
-      // TODO: check for successful orders/inventoryAdjust
-      // Meteor.call("orders/inventoryAdjust", orderId);
+      Meteor.call("orders/inventoryAdjust", orderId, "new");
       Collections.Cart.remove({
         _id: order.cartId
       });

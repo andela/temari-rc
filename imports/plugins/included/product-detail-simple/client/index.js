@@ -1,5 +1,7 @@
 import "./templates/productDetailSimple.html";
 import "./templates/productDetailSimple.js";
+import "./templates/review.html";
+import "./templates/review.js";
 import { registerComponent } from "/imports/plugins/core/layout/lib/components";
 
 import {
