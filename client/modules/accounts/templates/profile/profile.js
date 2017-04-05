@@ -105,7 +105,10 @@ Template.vendorForm.events({
         shopAddress: shopAddress
       }]
     };
-    Meteor.call("vendor/updateDetails", vendorDetails, function(err) {
+Meteor.call("vendor/updateDetails", vendorDetails, function (err) {
+      if (err) {
+        Alerts.toast(err, "error");
+      }
       Alerts.toast("Vendor Updated", "success");
     });
   }
