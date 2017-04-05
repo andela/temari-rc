@@ -63,13 +63,26 @@
       </div>
     </div>
     <!-- Cancel order button -->
-    <div class="panel-control-bar">
-      <div class="panel-controls">
-          <button data-event-category="accounts" data-event-action="cancel-order" id="cancelOrder" class="btn btn-warning" 
-          type="button">
-            <span>Cancel order</span>
-          </button>
+    
+    {{#if showCancelButton}}
+    <div>
+      <div class="panel-body">
+        <form name="cancelOrderForm">
+          <div class="form-group">
+            <label for="comment">Reason for Canceling Order</label>
+              <select class="form-control input-comment" id="comment" style="text-align-last: center;">
+                <option selected disabled>Select One</option>
+                <option value="failed">Failed delivery</option>
+                <option value="damaged">Damaged</option>
+                <option value="wrong">Wrong Item</option>
+                <option>Customer Changed Mind</option>
+              </select>
+          </div>
+        </form>
       </div>
     </div>
+     <button name="cancel" class="btn btn-sm btn-danger flex-item-fill" 
+      type="submit" data-event-action="cancelOrder" data-i18n="order.cancelOrder">Cancel Order</button>
+     {{/if}}
   </div>
 </template>

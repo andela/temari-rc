@@ -27,25 +27,64 @@ export function orderDebitMethod(order) {
  * Reaction Order Methods
  */
 export const methods = {
-  /**
+    /**
    * orders/cancelOrder
-   * @summary cancel order
-   * @param {Object} order - order Object
-   * @returns {String} returns workflow update result
+   *
+   * @summary Cancel an Order
+   * @param {Object} order - order object
+   * @return {Object} return update result
    */
-  "orders/cancelOrder": function (order) {
+  "orders/cancelOrder"(order) {
     check(order, Object);
 
-    const cancelOrder = Orders.update({
-      "_id": order._id,
-      "shipping.0": { $exists: true }
-    }, {
-      $set: {
-        "workflow.status": "coreOrderWorkflow/canceled",
-        "shipping.$.packed": false
-      }
+    let promise = new Promise((resolve, reject) => {
+      Orders.update(order._id, {
+        $set: {
+          "workflow.status": "canceled"
+        },
+        $addToSet: {
+          "workflow.workflow": "coreOrderWorkflow/canceled"
+        }
+      });
     });
+    promise.then(() => {
+      Meteor.call("orders/inventoryAdjust", order._id, "cancel");
+    });
+  },
 
+  /**
+   * orders/vendorCancelOrder
+   *
+   * @summary Cancel an Order
+   * @param {Object} order - order object
+   * @param {Object} newComment - new comment object
+   * @return {Object} return update result
+   */
+  "orders/vendorCancelOrder"(order, newComment) {
+    check(order, Object);
+    check(newComment, Object);
+
+    if (!Reaction.hasPermission("orders")) {
+      throw new Meteor.Error(403, "Access Denied");
+    }
+
+    // TODO: Refund order
+    let promise = new Promise((resolve, reject) => {
+      Orders.update(order._id, {
+        $set: {
+          "workflow.status": "canceled"
+        },
+        $push: {
+          comments: newComment
+        },
+        $addToSet: {
+          "workflow.workflow": "coreOrderWorkflow/canceled"
+        }
+      });
+    });
+    promise.then(() => {
+      Meteor.call("orders/inventoryAdjust", order._id, "cancel");
+    });
     return cancelOrder;
   },
 
@@ -872,7 +911,7 @@ export const methods = {
     });
   },
 
-  /**
+    /**
    * orders/inventoryAdjust
    * adjust inventory when an order is placed
    * @param {String} orderId - add tracking to orderId
@@ -898,10 +937,7 @@ export const methods = {
           inventoryQuantity: quantity
         }
       }, {
-        selector: {
-          type: "variant"
-        }
-      });
+        selector: { type: "variant" } });
     });
   },
 

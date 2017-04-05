@@ -1,0 +1,35 @@
+<template name="coreOrderCancelOrder">
+  <div aria-labelledby="coreOrderCancelOrder" class="panel panel-default" id="coreOrderCancelOrder-panel" role="tabpanel">
+    <div class="panel-heading">
+      <h3 class="panel-title">Cancel Order</h3>
+    </div>
+    {{#if showCancelOrderForm}}
+    <div class="panel-body">
+      <form name="cancelOrderForm">
+        <div class="form-group {{hasError messages.errors.comment}}">
+          <label>Reason</label>
+          <select class="form-control input-comment" id="comment" style="text-align-last: center;">
+              <option selected disabled>Select One</option>
+              <option value="failed">Failed delivery</option>
+              <option value="damaged">Damaged</option>
+              <option value="wrong">Wrong Item</option>
+              <option>Customer Changed Mind</option>
+            </select>
+          <!--<textarea name="comment" class="form-control input-comment"></textarea>-->
+          {{#if hasError messages.errors.comment}}
+            <span class="help-block">
+              {{messages.errors.comment.reason}}
+            </span>
+          {{/if}}
+        </div>
+
+        <hr>
+
+        <div class="flex">
+          <button class="btn btn-danger btn-block" type="submit" data-event-action="cancelOrder">Cancel Order</button>
+        </div>
+      </form>
+    </div>
+    {{/if}}
+  </div>
+</template>

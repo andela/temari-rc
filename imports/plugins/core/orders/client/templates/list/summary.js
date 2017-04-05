@@ -1,14 +1,18 @@
 import { Reaction } from "/client/api";
 import { Template } from "meteor/templating";
+import { Logger } from "/client/api";
 import { Meteor } from "meteor/meteor";
 import { NumericInput } from "/imports/plugins/core/ui/client/components";
 import swal from "sweetalert2";
 
 Template.ordersListSummary.onCreated(function () {
-  this.orders = new ReactiveVar();
+  this.state = new ReactiveDict();
+
   this.autorun(() => {
-    const instance = this;
-    instance.orders.set(Template.currentData().order);
+    const currentData = Template.currentData();
+    const order = currentData.order;
+
+    this.state.set("order", order);
   });
 });
 /**
@@ -30,24 +34,50 @@ Template.ordersListSummary.helpers({
       format: currencyFormat,
       isEditing: false
     };
+  },
+
+  showCancelButton() {
+    return !(this.order.workflow.status === "canceled"
+    || this.order.workflow.status === "coreOrderWorkflow/completed");
   }
 });
-Template.ordersListSummary.events({
-  "click #cancelOrder": (event) => {
-    event.preventDefault();
-    const order = Template.instance().orders.get();
-    // Make a method call to the server-side to cancel order.
-    Meteor.call("orders/cancelOrder", order, (err, result) => {
-      // result returns 1 if cancel order is succesful and 0 if false.
-      if (result === 1) {
-        swal("", "Order Canceled", "success").then(function () {
-          return Reaction.Router.go("/");
-        });
-      } else {
-        swal("", "Unable to Cancel", "error");
-      }
 
-      Meteor.call("orders/inventoryAdjust", order._id, "cancel");
+/**
+ * ordersListSummary events
+ */
+
+let comment;
+Template.ordersListSummary.events({
+  /**
+   * Submit form
+   * @param  {Event} event - Event object
+   * @param  {Template} instance - Blaze Template
+   * @return {void}
+   */
+  "click button[name=cancel]"(event, instance) {
+    event.stopPropagation();
+
+    const state = instance.state;
+    const order = state.get("order");
+
+    Alerts.alert({
+      title: "Are you sure you want to cancel this order.",
+      showCancelButton: true,
+      confirmButtonText: "Cancel Order"
+    }, (isConfirm) => {
+      if (isConfirm) {
+        Meteor.call("orders/cancelOrder", order, (error) => {
+          if (error) {
+            Logger.warn(error);
+          }
+        });
+        if (comment !== "damaged") {
+          Meteor.call("orders/inventoryAdjust", order._id, "cancel");
+        }
+      }
     });
+  },
+  "click [data-event-action=cancelOrder]": (event, template) => {
+    comment = $("#comment")[0].value;
   }
 });
